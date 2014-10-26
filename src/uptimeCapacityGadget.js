@@ -56,11 +56,40 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		});
 
 		function requestData() {
-			chart.addSeries({
-				name: "Capacity",
-				data: [1,2,3,4]
-			})
-	
+
+			var firstdate = null;
+			var lastdate = null;
+		    $.ajax({
+		        'async': true,
+		        'global': false,
+		        'url': '/dummydata.json',
+		        'dataType': "json",
+		        'success': function (data) {
+
+		        	$.each(data, function(index, value) {
+		            	chart.addSeries({
+		            		name: value[0],
+		            		data: value[1]
+						});
+						
+						firstdate = value[1][0][0];
+
+						valueLength = value[1].length - 1;
+						lastdate = value[1][valueLength][0];
+		        	});
+
+		        	capacityCap = 100;
+		        	CapacityLine = [
+		        					[firstdate, capacityCap],
+									[lastdate, capacityCap]
+								];
+					console.log(CapacityLine);
+		        	chart.addSeries({
+		        		name: "Capacity",
+		        		data: CapacityLine
+		        	});
+		        }
+	    	});	
 		}
 
 		// public functions for this function/class
