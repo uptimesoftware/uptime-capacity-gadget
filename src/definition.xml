@@ -35,8 +35,7 @@
 		#includeResources(jquery,highcharts)
 		
 		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/apiQueries.js?v=<%= pkg.gadget_version %>"></script>
-		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityBarChart.js?v=<%= pkg.gadget_version %>"></script>
-		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityPieChart.js?v=<%= pkg.gadget_version %>"></script>
+		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityGadget.js?v=<%= pkg.gadget_version %>"></script>
 		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacity.js?v=<%= pkg.gadget_version %>"></script>
 		
 	</head>

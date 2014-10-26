@@ -181,15 +181,15 @@ $(function() {
 		}
 		$("#widgetChart").show();
 
-		if (uptimeCapacitySettings.chartTypeId == "pie") {
-			myChart = new UPTIME.UptimeCapacityGadget({
-				dimensions : myChartDimensions,
-				chartDivId : "widgetChart",
-				chartType : uptimeCapacitySettings.chartTypeId,
-				elementId : uptimeCapacitySettings.elementId,
-				refreshInterval : uptimeCapacitySettings.refreshInterval
-			}, displayStatusBar, clearStatusBar);
-		} 
+
+		myChart = new UPTIME.UptimeCapacityGadget({
+			dimensions : myChartDimensions,
+			chartDivId : "widgetChart",
+			chartType : uptimeCapacitySettings.chartTypeId,
+			elementId : uptimeCapacitySettings.elementId,
+			refreshInterval : uptimeCapacitySettings.refreshInterval
+		}, displayStatusBar, clearStatusBar);
+
 		myChart.render();
 		$("body").height($(window).height());
 	}

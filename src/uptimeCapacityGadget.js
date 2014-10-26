@@ -33,148 +33,34 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			refreshInterval = options.refreshInterval;
 		}
 
-		var seriesData = [ {
-			id : 'OK',
-			name : 'OK',
-			data : [ 0 ],
-			color : '#67B10B'
-		}, {
-			id : 'WARN',
-			name : 'WARN',
-			data : [ 0 ],
-			color : '#DAD60B'
-		}, {
-			id : 'CRIT',
-			name : 'CRIT',
-			data : [ 0 ],
-			color : '#B61211'
-		}, {
-			id : 'MAINT',
-			name : 'MAINT',
-			data : [ 0 ],
-			color : '#555B98'
-		}, {
-			id : 'UNKNOWN',
-			name : 'UNKNOWN',
-			data : [ 0 ],
-			color : '#AEAEAE'
-		} ];
-
 		var dataLabelsEnabled = false;
 		var chart = new Highcharts.Chart({
 			chart : {
-				renderTo : chartDivId,
-				width : dimensions.width,
-				height : dimensions.height,
-				type : chartType,
-				animation : true,
-				style : textStyle
-			},
-			credits : {
-				enabled : false
-			},
-			plotOptions : {
-				series : {
-					pointWidth : 20,
-					animation : true
-				}
-			},
-			title : {
-				text : '&nbsp;',
-				y : 5,
-				style : $.extend({
-					fontWeight : "bold"
-				}, textStyle),
-				useHTML : true
-			},
-			subtitle : {
-				text : '&nbsp;',
-				y : 20,
-				style : textStyle,
-				useHTML : true
-			},
-			xAxis : {
-				labels : {
-					enabled : false
-				}
-			},
-			yAxis : {
-				labels : {
-					style : textStyle,
-				},
-				allowDecimals : false,
-				min : 0,
-				title : {
-					text : ''
-				}
-			},
-			tooltip : {
-				style : textStyle,
-				formatter : function() {
-					if (dataLabelsEnabled) {
-						return '<b>' + this.series.name + '</b> - ' + monitorCount(this.y);
-					} else {
-						return '';
-					}
-				}
-			},
-			legend : {
-				enabled : false
-			},
-			series : seriesData,
-			spacingTop : 5,
-			spacingRight : 5,
-			spacingBottom : 5,
-			spacingLeft : 5
+				renderTo: 'widgetChart',
+                type: 'line',
+                style: {fontFamily: 'Arial',
+                    fontSize: '9px'},
+                spacingTop: 10,
+                spacingBottom: 10},
+            	title: {text: ""},
+            	credits: {enabled: false},
+            	xAxis: {type: 'datetime',
+    	            title: {enabled: true,
+        	        text: ""}},
+            	yAxis: {min: 0,
+            	    title: {enabled: false,
+                    text: ""}},
+            	plotOptions: {spline: {marker: {enabled: false}},
+                    areaspline: {marker: {enabled: false}}},
+            	series: [],
 		});
 
 		function requestData() {
-			api.getElementStatus(elementId).then(
-					function(result) {
-						if (!result.isMonitored) {
-							chart.hideLoading();
-							displayStatusBar("No visible elements to monitor", "Error Loading Chart Data");						
-							return;
-						}						
-						var statusCount = {
-							'OK' : 0,
-							'WARN' : 0,
-							'CRIT' : 0,
-							'UNKNOWN' : 0,
-							'MAINT' : 0
-						};
-						var total = 0;
-						$.each(result.monitorStatus, function(index, monitor) {
-							if (monitor.isMonitored && !monitor.isHidden) {
-								statusCount[monitor.status]++;
-								total++;
-							}
-						});
-						chart.setTitle({
-							text : '<a href="' + uptimeGadget.getElementUrls(result.id, result.name).services
-									+ '" target="_top">' + escapeHtml(result.name) + '</a>',
-						}, {
-							text : monitorCount(total),
-						});
-						$.each(statusCount, function(status, count) {
-							var bar = chart.get(status);
-							bar.setData([ count ]);
-							if (count > 0) {
-								bar.show();
-							} else {
-								bar.hide();
-							}
-						});
-						clearStatusBar();
-						dataLabelsEnabled = true;
-						chart.hideLoading();
-					}, function(error) {
-						chart.hideLoading();
-						displayStatusBar(error, "Error Loading Chart Data");
-					});
-			if (refreshInterval > 0) {
-				chartTimer = setTimeout(requestData, refreshInterval * 1000);
-			}
+			chart.addSeries({
+				name: "Capacity",
+				data: [1,2,3,4]
+			})
+	
 		}
 
 		// public functions for this function/class
