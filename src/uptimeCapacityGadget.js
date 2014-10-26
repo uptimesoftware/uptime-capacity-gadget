@@ -88,6 +88,10 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		        		name: "Capacity",
 		        		data: CapacityLine
 		        	});
+
+		        	clearStatusBar();
+					dataLabelsEnabled = true;
+					chart.hideLoading();
 		        }
 	    	});	
 		}
