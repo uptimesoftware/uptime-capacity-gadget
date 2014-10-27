@@ -57,8 +57,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 		function requestData() {
 
-			var firstdate = null;
-			var lastdate = null;
+			var firstPoint = null;
+			var lastPoint = null;
 		    $.ajax({
 		        'async': true,
 		        'global': false,
@@ -72,21 +72,70 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		            		data: value[1]
 						});
 						
-						firstdate = value[1][0][0];
+						firstPoint = value[1][0];
 
 						valueLength = value[1].length - 1;
-						lastdate = value[1][valueLength][0];
+						lastPoint = value[1][valueLength];
 		        	});
 
+		        	timeseries = data[0][1];
+
+
+		        	xDeltaTotal = 0;
+		        	yDeltaTotal = 0;
+
+		        	$.each(timeseries, function(index, value) {
+		        		if (index >= 1)
+		        		{
+		        			xDelta = value[1] - timeseries[index - 1][1];
+		        			yDelta = value[0] - timeseries[index - 1][0];
+		        			xDeltaTotal = xDeltaTotal + xDelta;
+		        			yDeltaTotal = yDeltaTotal + yDelta;
+		        		}
+
+		        	});
+
+		        	xDelta = xDeltaTotal / timeseries.length;
+		        	yDelta = yDeltaTotal / timeseries.length;
+
 		        	capacityCap = 100;
+
+
+		        	LineOfBestFit = [];
+
+		        	current_Xvalue = firstPoint[1];
+		        	current_Yvalue = firstPoint[0];
+
+		        	while(current_Xvalue < capacityCap)
+		        	{
+		        		current_Yvalue = current_Yvalue + yDelta;
+		        		current_Xvalue = current_Xvalue + xDelta;
+		        		LineOfBestFit.push([current_Yvalue, current_Xvalue]);
+		        	}
+
+
+
+		        	doomsday = LineOfBestFit[LineOfBestFit.length - 1];//last point
+		        	
 		        	CapacityLine = [
-		        					[firstdate, capacityCap],
-									[lastdate, capacityCap]
+		        					[firstPoint[0], capacityCap],
+									[lastPoint[0], capacityCap],
+									[doomsday[0], capacityCap]
+
 								];
-					console.log(CapacityLine);
+
+
+
+
+
 		        	chart.addSeries({
 		        		name: "Capacity",
 		        		data: CapacityLine
+		        	});
+
+					chart.addSeries({
+		        		name: "Usage",
+		        		data: LineOfBestFit
 		        	});
 
 		        	clearStatusBar();
