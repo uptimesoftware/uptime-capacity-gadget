@@ -44,15 +44,27 @@
 	<body>
 
 		<div id="widgetSettings">
-			Select Element:
+
 			<form id="widgetOptions">
+
+				<div id="availableQueries">
+					Query Type:
+					<select id="QueryTypeSelector" class="query-type-setting">
+						<option value="HostMem">Host Memory</option>
+						<option value="HostCpu">Host Cpu</option>
+						<option value="ClusterMem">Cluster Mem</option>
+						<option value="ClusterCpu">Cluster Cpu</option>
+						<option value="Datastore">Datastore</option>
+					</select>
+				</div>
 				<div id="availableElements">
+					Select Element:
 					<select id="elementId" class="element-status-setting">
 						<option value="-1">Loading...</option>
 					</select>
 				</div>
 				<br/>
-				Based on what metrics:
+				Based on what value:
 				<br/>
 				<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
 				<br/>

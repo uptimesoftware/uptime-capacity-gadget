@@ -14,6 +14,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		var chartDivId = null;
 		var elementId = null;
 		var metricType = null;
+		var queryType = null;
 		var chartTimer = null;
 		var api = new apiQueries();
 		var getMetricsPath = null;
@@ -29,6 +30,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			dimensions = options.dimensions;
 			chartDivId = options.chartDivId;
 			metricType = options.metricType;
+			queryType = options.queryType;
 			elementId = options.elementId;
 			getMetricsPath = options.getMetricsPath;
 		}
@@ -59,7 +61,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			var firstPoint = null;
 			var lastPoint = null;
-			var my_url = getMetricsPath + '&query_type=HostMem&metricType='  + metricType + "&element=" + elementId;
+			var my_url = getMetricsPath + '&query_type=' + queryType + '&metricType='  + metricType + "&element=" + elementId;
 		    $.ajax({
 		        'async': true,
 		        'global': false,
@@ -108,16 +110,19 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			        	current_Yvalue = lastPoint[0];
 			        	LineOfBestFitForEstimatedMetrics = [[current_Yvalue, current_Xvalue]];
 
-			        	while(current_Xvalue < capacityCap)
+			        	if ( current_Xvalue < capacityCap && xDelta > 0)
 			        	{
-			        		current_Yvalue = current_Yvalue + yDelta;
-			        		current_Xvalue = current_Xvalue + xDelta;
-			        		if (current_Xvalue >= capacityCap)
-			        		{
-			        			LineOfBestFitForEstimatedMetrics.push([current_Yvalue, current_Xvalue]);
-			        		}
-			        	} 
+				        	while(current_Xvalue < capacityCap)
+				        	{
+				        		current_Yvalue = current_Yvalue + yDelta;
+				        		current_Xvalue = current_Xvalue + xDelta;
+				        		if (current_Xvalue >= capacityCap)
+				        		{
+				        			LineOfBestFitForEstimatedMetrics.push([current_Yvalue, current_Xvalue]);
+				        		}
+				        	} 
 
+			        	}
 			        	doomsday = LineOfBestFitForEstimatedMetrics[LineOfBestFitForEstimatedMetrics.length - 1];//last point
 			        	
 			        	CapacityLine = [

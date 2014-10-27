@@ -19,6 +19,7 @@ $(function() {
 
 	$("#widgetSettings").hide();
 
+	$('.query-type-setting').change(settingChanged);
 	$('.element-status-setting').change(settingChanged);
 	$('#widgetOptions input[name=metricType]:radio').change(settingChanged);
 
@@ -65,6 +66,7 @@ $(function() {
 	function settingChanged() {
 		uptimeCapacitySettings.metricType = $("#widgetOptions input[name=metricType]:radio:checked").val();
 		uptimeCapacitySettings.elementId = $('#elementId').find(":selected").val();
+		uptimeCapacitySettings.queryType = $('#QueryTypeSelector').find(":selected").val();
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
 	}
@@ -142,6 +144,7 @@ $(function() {
 		clearStatusBar();
 		if (settings) {
 			$("#elementId").val(settings.elementId);
+			$("#QueryTypeSelector").val(settings.queryType);
 			$("#" + settings.metricType).prop("checked", true);
 			$.extend(uptimeCapacitySettings, settings);
 			displayChart();
@@ -192,6 +195,7 @@ $(function() {
 			dimensions : myChartDimensions,
 			chartDivId : "widgetChart",
 			metricType : uptimeCapacitySettings.metricType,
+			queryType : uptimeCapacitySettings.queryType,
 			elementId : uptimeCapacitySettings.elementId,
 		}, displayStatusBar, clearStatusBar);
 

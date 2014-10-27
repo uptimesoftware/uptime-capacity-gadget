@@ -52,19 +52,21 @@ else
 }
 
 
+if (isset($elementID))
+{
+	//get the vmware_object_id for our entity_id
+	$vmware_object_id_sql = "select vmware_object_id from vmware_object where entity_id = $elementID";
+	$vmware_object_results = $db->execQuery($vmware_object_id_sql);
+	$vmware_object_id = $vmware_object_results[0]['VMWARE_OBJECT_ID'];
+}
+
+
 if ($query_type == "HostMem")
 {
 
 	$min_mem_usage_array = array();
 	$max_mem_usage_array = array();
 	$avg_mem_usage_array = array();
-
-
-
-	//get the vmware_object_id for our entity_id
-	$vmware_object_id_sql = "select vmware_object_id from vmware_object where entity_id = $elementID";
-	$vmware_object_results = $db->execQuery($vmware_object_id_sql);
-	$vmware_object_id = $vmware_object_results[0]['VMWARE_OBJECT_ID'];
 
 
 	$sql = "SELECT 
@@ -111,7 +113,7 @@ GROUP BY
 		array_push($avg_mem_usage_array, $data);
 	}
 
-	$capacity = intval($hostMemResults[0]['TOTAL_CAPACITY'] / 2);
+	$capacity = intval($hostMemResults[0]['TOTAL_CAPACITY']);
 
 	if ($metricType == 'min')
 	{
@@ -137,6 +139,101 @@ GROUP BY
 			'name' => $name . " - Daily Mem Avg",
 			'capacity' => $capacity,
 			'series' => $avg_mem_usage_array
+			);
+	}
+
+
+	array_push($json, $my_series);
+	echo json_encode($json);
+
+
+
+
+
+}
+
+elseif ($query_type == "HostCpu")
+{
+
+	$min_cpu_usage_array = array();
+	$max_cpu_usage_array = array();
+	$avg_cpu_usage_array = array();
+
+
+
+	$sql = "SELECT 
+	s.vmware_object_id, 
+	o.vmware_name as NAME,
+	date(s.sample_time) as SAMPLE_TIME,
+	min(a.cpu_usage) as MIN_CPU_USAGE,
+	max(a.cpu_usage) as MAX_CPU_USAGE,
+	avg(a.cpu_usage) as AVG_CPU_USAGE,
+	a.cpu_total as TOTAL_CAPACITY,
+	day(s.sample_time), 
+	month(s.sample_time), 
+	year(s.sample_time) 
+FROM 
+	vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
+WHERE 
+	s.sample_id = a.sample_id AND 
+	s.vmware_object_id = o.vmware_object_id AND
+	s.sample_time >= '2014-09-20 14:18:01' AND 
+	s.sample_time < '2014-10-23 14:18:01'  AND
+	s.vmware_object_type = 'HostSystem' AND
+	s.vmware_object_id = $vmware_object_id
+
+GROUP BY 
+	s.vmware_object_id,
+	year(s.sample_time),
+	month(s.sample_time), 
+	day(s.sample_time)
+
+";
+
+	$hostCpuResults = $db->execQuery($sql);
+
+	$name = $hostCpuResults[0]['NAME'];
+
+	foreach ($hostCpuResults as $index => $row) {
+		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
+		$x = $sample_time * 1000;
+
+		$data = array($x, floatval($row['MIN_CPU_USAGE']));
+		array_push($min_cpu_usage_array, $data);
+
+		$data = array($x, floatval($row['MAX_CPU_USAGE']));
+		array_push($max_cpu_usage_array, $data);
+
+		$data = array($x, floatval($row['AVG_CPU_USAGE']));
+		array_push($avg_cpu_usage_array, $data);
+	}
+
+	$capacity = intval($hostCpuResults[0]['TOTAL_CAPACITY']);
+
+	if ($metricType == 'min')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Cpu Min",
+			'capacity' => $capacity,
+			'series' => $min_cpu_usage_array
+			);
+	}
+
+	if ($metricType == 'max')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Cpu Max",
+			'capacity' => $capacity,
+			'series' => $max_cpu_usage_array
+			);
+	}
+
+	if ($metricType == 'avg')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Cpu Avg",
+			'capacity' => $capacity,
+			'series' => $avg_cpu_usage_array
 			);
 	}
 
