@@ -22,8 +22,8 @@ include("uptimeDB.php");
 if (isset($_GET['query_type'])){
 	$query_type = $_GET['query_type'];
 }
-if (isset($_GET['uptime_offest'])){
-	$offset = $_GET['uptime_offest'];
+if (isset($_GET['uptime_offset'])){
+	$offset = $_GET['uptime_offset'];
 }
 if (isset($_GET['time_frame'])){
 	$time_frame = $_GET['time_frame'];
