@@ -28,6 +28,10 @@ if (isset($_GET['uptime_offset'])){
 if (isset($_GET['time_frame'])){
 	$time_frame = $_GET['time_frame'];
 }
+else
+{
+	$time_frame = 3;
+}
 if (isset($_GET['metricType'])){
 	$metricType = $_GET['metricType'];
 }
@@ -85,8 +89,7 @@ if ($query_type == "HostMem")
 	WHERE 
 		s.sample_id = a.sample_id AND 
 		s.vmware_object_id = o.vmware_object_id AND
-		s.sample_time >= '2014-04-01 00:00:00' AND 
-		s.sample_time < '2014-10-27 00:00:00'  AND
+		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
 		s.vmware_object_type = 'HostSystem' AND
 		s.vmware_object_id = $vmware_object_id
 	GROUP BY 
@@ -171,8 +174,7 @@ elseif ($query_type == "HostCpu")
 	WHERE 
 		s.sample_id = a.sample_id AND 
 		s.vmware_object_id = o.vmware_object_id AND
-		s.sample_time >= '2014-09-20 14:18:01' AND 
-		s.sample_time < '2014-10-23 14:18:01'  AND
+		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
 		s.vmware_object_type = 'HostSystem' AND
 		s.vmware_object_id = $vmware_object_id
 
