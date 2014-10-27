@@ -30,6 +30,7 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<title>Capacity Gadget</title>
+		<link href="__UPTIME_GADGET_BASE__/uptimeCapacity.css" type="text/css" rel="stylesheet" />
 
 		#includeResources(jquery,highcharts)
 		
@@ -77,6 +78,7 @@
 			</form>
 		</div>
 
+		<div id ="countDownTillDoomsDay"></div>
 		<div id = "widgetChart"></div>
 		<div id="statusBar"></div>
 

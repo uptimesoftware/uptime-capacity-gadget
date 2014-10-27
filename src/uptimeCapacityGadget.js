@@ -134,7 +134,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 
 
-
+						countDowntillDoomsday(lastPoint, doomsday);
 
 			        	chart.addSeries({
 			        		name: "Capacity",
@@ -159,6 +159,17 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 					chart.hideLoading();
 		        }
 	    	});	
+		}
+
+
+		function countDowntillDoomsday(startpoint, endpoint)
+		{
+			$("#countDownTillDoomsDay").html("");
+			starttime = startpoint[0];
+			endtime = endpoint[0];
+			time_left =  (endtime - starttime);
+			time_left_in_days = Math.round(time_left / 1000 / 60 / 60 / 24);
+			$("#countDownTillDoomsDay").html("Days left till doomsday: " + time_left_in_days);
 		}
 
 		// public functions for this function/class

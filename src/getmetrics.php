@@ -70,30 +70,30 @@ if ($query_type == "HostMem")
 
 
 	$sql = "SELECT 
-	s.vmware_object_id, 
-	o.vmware_name as NAME,
-	date(s.sample_time) as SAMPLE_TIME,
-	min(a.memory_usage) as MIN_MEM_USAGE,
-	max(a.memory_usage) as MAX_MEM_USAGE,
-	avg(a.memory_usage) as AVG_MEM_USAGE,
-	a.memory_total		as TOTAL_CAPACITY,
-	day(s.sample_time), 
-	month(s.sample_time), 
-	year(s.sample_time) 
-FROM 
-	vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
-WHERE 
-	s.sample_id = a.sample_id AND 
-	s.vmware_object_id = o.vmware_object_id AND
-	s.sample_time >= '2014-04-01 00:00:00' AND 
-	s.sample_time < '2014-10-27 00:00:00'  AND
-	s.vmware_object_type = 'HostSystem' AND
-	s.vmware_object_id = $vmware_object_id
-GROUP BY 
-	s.vmware_object_id,
-	year(s.sample_time),
-	month(s.sample_time), 
-	day(s.sample_time)";
+		s.vmware_object_id, 
+		o.vmware_name as NAME,
+		date(s.sample_time) as SAMPLE_TIME,
+		min(a.memory_usage) as MIN_MEM_USAGE,
+		max(a.memory_usage) as MAX_MEM_USAGE,
+		avg(a.memory_usage) as AVG_MEM_USAGE,
+		a.memory_total		as TOTAL_CAPACITY,
+		day(s.sample_time), 
+		month(s.sample_time), 
+		year(s.sample_time) 
+	FROM 
+		vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
+	WHERE 
+		s.sample_id = a.sample_id AND 
+		s.vmware_object_id = o.vmware_object_id AND
+		s.sample_time >= '2014-04-01 00:00:00' AND 
+		s.sample_time < '2014-10-27 00:00:00'  AND
+		s.vmware_object_type = 'HostSystem' AND
+		s.vmware_object_id = $vmware_object_id
+	GROUP BY 
+		s.vmware_object_id,
+		year(s.sample_time),
+		month(s.sample_time), 
+		day(s.sample_time)";
 
 	$hostMemResults = $db->execQuery($sql);
 
@@ -145,13 +145,7 @@ GROUP BY
 
 	array_push($json, $my_series);
 	echo json_encode($json);
-
-
-
-
-
 }
-
 elseif ($query_type == "HostCpu")
 {
 
@@ -162,33 +156,31 @@ elseif ($query_type == "HostCpu")
 
 
 	$sql = "SELECT 
-	s.vmware_object_id, 
-	o.vmware_name as NAME,
-	date(s.sample_time) as SAMPLE_TIME,
-	min(a.cpu_usage) as MIN_CPU_USAGE,
-	max(a.cpu_usage) as MAX_CPU_USAGE,
-	avg(a.cpu_usage) as AVG_CPU_USAGE,
-	a.cpu_total as TOTAL_CAPACITY,
-	day(s.sample_time), 
-	month(s.sample_time), 
-	year(s.sample_time) 
-FROM 
-	vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
-WHERE 
-	s.sample_id = a.sample_id AND 
-	s.vmware_object_id = o.vmware_object_id AND
-	s.sample_time >= '2014-09-20 14:18:01' AND 
-	s.sample_time < '2014-10-23 14:18:01'  AND
-	s.vmware_object_type = 'HostSystem' AND
-	s.vmware_object_id = $vmware_object_id
+		s.vmware_object_id, 
+		o.vmware_name as NAME,
+		date(s.sample_time) as SAMPLE_TIME,
+		min(a.cpu_usage) as MIN_CPU_USAGE,
+		max(a.cpu_usage) as MAX_CPU_USAGE,
+		avg(a.cpu_usage) as AVG_CPU_USAGE,
+		a.cpu_total as TOTAL_CAPACITY,
+		day(s.sample_time), 
+		month(s.sample_time), 
+		year(s.sample_time) 
+	FROM 
+		vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
+	WHERE 
+		s.sample_id = a.sample_id AND 
+		s.vmware_object_id = o.vmware_object_id AND
+		s.sample_time >= '2014-09-20 14:18:01' AND 
+		s.sample_time < '2014-10-23 14:18:01'  AND
+		s.vmware_object_type = 'HostSystem' AND
+		s.vmware_object_id = $vmware_object_id
 
-GROUP BY 
-	s.vmware_object_id,
-	year(s.sample_time),
-	month(s.sample_time), 
-	day(s.sample_time)
-
-";
+	GROUP BY 
+		s.vmware_object_id,
+		year(s.sample_time),
+		month(s.sample_time), 
+		day(s.sample_time)";
 
 	$hostCpuResults = $db->execQuery($sql);
 
