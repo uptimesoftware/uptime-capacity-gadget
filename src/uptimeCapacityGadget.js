@@ -13,8 +13,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		var dimensions = new UPTIME.pub.gadgets.Dimensions(100, 100);
 		var chartDivId = null;
 		var elementId = null;
-		var chartType = null;
-		var refreshInterval = 30;
+		var metricType = null;
 		var chartTimer = null;
 		var api = new apiQueries();
 		var getMetricsPath = null;
@@ -29,9 +28,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		if (typeof options == "object") {
 			dimensions = options.dimensions;
 			chartDivId = options.chartDivId;
-			chartType = options.chartType;
+			metricType = options.metricType;
 			elementId = options.elementId;
-			refreshInterval = options.refreshInterval;
 			getMetricsPath = options.getMetricsPath;
 		}
 
@@ -61,7 +59,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			var firstPoint = null;
 			var lastPoint = null;
-			var my_url = getMetricsPath + '&query_type=HostMem' 
+			var my_url = getMetricsPath + '&query_type=HostMem&metricType='  + metricType + "&element=" + elementId;
 		    $.ajax({
 		        'async': true,
 		        'global': false,

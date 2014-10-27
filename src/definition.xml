@@ -30,7 +30,6 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<title>Capacity Gadget</title>
-		<link href="__UPTIME_GADGET_BASE__/uptimeCapacity.css" type="text/css" rel="stylesheet" />
 
 		#includeResources(jquery,highcharts)
 		
@@ -53,26 +52,15 @@
 					</select>
 				</div>
 				<br/>
-				Display As:
+				Based on what metrics:
 				<br/>
-				<input type="radio" checked id="pie" class="element-status-setting" name="chartType" value="pie"> Pie Chart
+				<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
 				<br/>
-				<input type="radio" id="bar" class="element-status-setting" name="chartType" value="bar"> Horizontal Bar Chart
+				<input type="radio" id="max" class="element-status-setting" name="metricType" value="max"> Max
 				<br/>
-				<input type="radio" id="column" class="element-status-setting" name="chartType" value="column"> Vertical Bar Chart
+				<input type="radio" id="min" class="element-status-setting" name="metricType" value="min"> Min
 				<br/>
 				<br/>
-					<label for="refreshRate">Refresh Rate:</label>
-					<select id="refreshRate" class="element-status-setting" name="refreshRate">
-						<option value="30">30s</option>
-						<option value="60">1m</option>
-						<option value="300">5m</option>
-						<option value="600">10m</option>
-						<option value="900">15m</option>
-						<option value="3600">1h</option>
-						<option value="-1">Never</option>
-					</select>
-				<br/><br/>
 				<button id="closeSettings">Close</button>
 			</form>
 		</div>

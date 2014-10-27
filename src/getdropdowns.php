@@ -15,9 +15,23 @@
 //damages.
 
 // Set the JSON header
+
+require_once $_SERVER['DOCUMENT_ROOT'] . "/includes/classLoader.inc";
+
+
+session_start();
+
+$user_name =  $_SESSION['current_user']->getName();
+$user_pass = $_SESSION['current_user']->getPassword();
+
+session_write_close();
+
+
+
 header("Content-type: text/json");
 
 include("uptimeDB.php");
+include("uptimeApi.php");
 
 if (isset($_GET['query_type'])){
 	$query_type = $_GET['query_type'];
@@ -33,98 +47,35 @@ $oneElement = array();
 $performanceData = array();
 //date_default_timezone_set('UTC');
 
-$db = new uptimeDB;
-if ($db->connectDB())
+$uptime_api_username = $user_name;
+$uptime_api_password = $user_pass;
+$uptime_api_hostname = "localhost";     // up.time Controller hostname (usually localhost, but not always)
+$uptime_api_port = 9997;
+$uptime_api_version = "v1";
+$uptime_api_ssl = true;
+
+
+if ($query_type == "getEsxHosts")
 {
-	echo "";
+	//get the list of ESX Hosts the user is able to see according to the API.
+	$uptime_api = new uptimeApi($uptime_api_username, $uptime_api_password, $uptime_api_hostname, $uptime_api_port, $uptime_api_version, $uptime_api_ssl);
 
-}
-else
-{
- echo "unable to connect to DB exiting";	
- exit(1);
-}
+    $elements = $uptime_api->getElements("type=Server&isMonitored=1");
 
+    foreach ($elements as $key => $value) {
 
-if ($query_type == "HostMem")
-{
+    	if( preg_match("/ESX/", $value['typeOs']) )
+    	{
+    		$id = $value['id'];
+    		$name = $value['name'];
 
-	$json_output = array();
-	$min_mem_usage_array = array();
-	$max_mem_usage_array = array();
-	$avg_mem_usage_array = array();
+    		$json[$name] = $id;
+    	}
+    }
 
-
-	$sql = "SELECT 
-	s.vmware_object_id, 
-	o.vmware_name as NAME,
-	date(s.sample_time) as SAMPLE_TIME,
-	min(a.memory_usage) as MIN_MEM_USAGE,
-	max(a.memory_usage) as MAX_MEM_USAGE,
-	avg(a.memory_usage) as AVG_MEM_USAGE,
-	min(a.memory_total),
-	max(a.memory_total),
-	avg(a.memory_total),
-	day(s.sample_time), 
-	month(s.sample_time), 
-	year(s.sample_time) 
-FROM 
-	vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
-WHERE 
-	s.sample_id = a.sample_id AND 
-	s.vmware_object_id = o.vmware_object_id AND
-	s.sample_time >= '2014-04-01 00:00:00' AND 
-	s.sample_time < '2014-10-27 00:00:00'  AND
-	s.vmware_object_type = 'HostSystem' AND
-	s.vmware_object_id = 192
-GROUP BY 
-	s.vmware_object_id,
-	year(s.sample_time),
-	month(s.sample_time), 
-	day(s.sample_time)";
-
-	$hostMemResults = $db->execQuery($sql);
-
-	$name = $hostMemResults[0]['NAME'];
-
-	foreach ($hostMemResults as $index => $row) {
-		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
-		$x = $sample_time * 1000;
-
-		$data = array($x, floatval($row['MIN_MEM_USAGE']));
-		array_push($min_mem_usage_array, $data);
-
-		$data = array($x, floatval($row['MAX_MEM_USAGE']));
-		array_push($max_mem_usage_array, $data);
-
-		$data = array($x, floatval($row['AVG_MEM_USAGE']));
-		array_push($avg_mem_usage_array, $data);
-	}
-
-	/*
-	$my_series = array();
-	array_push($my_series, $name . " - Dialy Mem Min");
-	array_push($my_series, $min_mem_usage_array);
-	array_push($json, $my_series);
-
-	$my_series = array();
-	array_push($my_series, $name . " - Dialy Mem Max");
-	array_push($my_series, $max_mem_usage_array);
-	array_push($json, $my_series);
-	*/
-
-	$my_series = array();
-	array_push($my_series, $name . " - Dialy Mem Avg");
-	array_push($my_series, $avg_mem_usage_array);
-	array_push($json, $my_series);
-
-
-
-	echo json_encode($json);
-
-
-
-
+    ksort($json);
+    echo json_encode($json);
+	
 
 }
 

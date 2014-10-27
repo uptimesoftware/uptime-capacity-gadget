@@ -2,6 +2,7 @@ $(function() {
 
 	var currentURL = $("script#ownScript").attr("src");
     var getMetricsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getmetrics.php';
+    var getDropDownsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getdropdowns.php';
 
     var date = new Date();
     var uptimeOffset = date.getTimezoneOffset()*60;
@@ -19,6 +20,7 @@ $(function() {
 	$("#widgetSettings").hide();
 
 	$('.element-status-setting').change(settingChanged);
+	$('#widgetOptions input[name=metricType]:radio').change(settingChanged);
 
 	$("#closeSettings").click(function() {
 		$("#widgetSettings").slideUp();
@@ -61,10 +63,9 @@ $(function() {
 	}
 
 	function settingChanged() {
-		uptimeCapacitySettings.chartTypeId = $("#widgetOptions input[name=chartType]:radio:checked").val();
+		uptimeCapacitySettings.metricType = $("#widgetOptions input[name=metricType]:radio:checked").val();
 		uptimeCapacitySettings.elementId = $('#elementId').find(":selected").val();
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
-		uptimeCapacitySettings.refreshInterval = $("#refreshRate").val();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
 	}
 
@@ -91,17 +92,10 @@ $(function() {
 		$("#widgetOptions input[name=chartType]").filter('[value=' + uptimeCapacitySettings.chartTypeId + ']').prop('checked',
 				true);
 		$('#elementId').val(uptimeCapacitySettings.elementId);
-		$("#refreshRate").val(uptimeCapacitySettings.refreshInterval);
 
 		$("#widgetSettings").slideDown();
 		$("body").height($(window).height());
-		return populateIdSelector().then(function() {
-			if (!myChart) {
-				settingChanged();
-			}
-		}, function(error) {
-			displayStatusBar(error, "Error Loading the List of Elements from up.time Controller");
-		});
+		populateIdSelector();
 	}
 
 	function disableSettings() {
@@ -120,31 +114,35 @@ $(function() {
 
 	function populateIdSelector() {
 		disableSettings();
-		$('#elementId').empty().append($("<option />").val(-1).text("Loading..."));
-		return api.getAllElements().then(function(elements) {
+		dropdownselector = '#elementId';
+		url = getDropDownsPath + "?uptime_offset=14400&query_type=getEsxHosts";
+		$(dropdownselector).empty().append($("<option />").val(-1).text("Loading..."));
+
+		$.getJSON(url, function(data) {
+		}).done(function(data) {
+			$(dropdownselector).empty();
 			clearStatusBar();
 			enableSettings();
-			// fill in element drop down list
-			elements.sort(elementSort);
-			var elementSelector = $('#elementId').empty();
-			$.each(elements, function() {
-				if (!this.isMonitored) {
-					return;
-				}
-				elementSelector.append($("<option />").val(this.id).text(this.name));
+			$.each(data, function(key, val) {
+				$(dropdownselector).append($("<option />").val(val).text(key));
 			});
-			if (uptimeCapacitySettings.elementId >= 0) {
-				elementSelector.val(uptimeCapacitySettings.elementId);
+
+			if (!myChart) {
+				settingChanged();
 			}
+		}).fail(function(jqXHR, textStatus, errorThrown) {
+			console.log("Error with: " + url) ;
+			displayStatusBar(error, "Error Loading the List of Elements from up.time Controller");
 		});
+
+
 	}
 
 	function goodLoad(settings) {
 		clearStatusBar();
 		if (settings) {
 			$("#elementId").val(settings.elementId);
-			$("#" + settings.chartTypeId).prop("checked", true);
-			$("#refreshRate").val(settings.refreshInterval);
+			$("#" + settings.metricType).prop("checked", true);
 			$.extend(uptimeCapacitySettings, settings);
 			displayChart();
 		} else if (uptimeGadget.isOwner()) {
@@ -193,9 +191,8 @@ $(function() {
 			getMetricsPath : getMetricsPath + "?uptime_offset=" + uptimeOffset,
 			dimensions : myChartDimensions,
 			chartDivId : "widgetChart",
-			chartType : uptimeCapacitySettings.chartTypeId,
+			metricType : uptimeCapacitySettings.metricType,
 			elementId : uptimeCapacitySettings.elementId,
-			refreshInterval : uptimeCapacitySettings.refreshInterval
 		}, displayStatusBar, clearStatusBar);
 
 		myChart.render();

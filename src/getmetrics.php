@@ -28,6 +28,12 @@ if (isset($_GET['uptime_offset'])){
 if (isset($_GET['time_frame'])){
 	$time_frame = $_GET['time_frame'];
 }
+if (isset($_GET['metricType'])){
+	$metricType = $_GET['metricType'];
+}
+if (isset($_GET['element'])){
+	$elementID = $_GET['element'];
+}
 $json = array();
 $oneElement = array();
 $performanceData = array();
@@ -49,10 +55,16 @@ else
 if ($query_type == "HostMem")
 {
 
-	$json_output = array();
 	$min_mem_usage_array = array();
 	$max_mem_usage_array = array();
 	$avg_mem_usage_array = array();
+
+
+
+	//get the vmware_object_id for our entity_id
+	$vmware_object_id_sql = "select vmware_object_id from vmware_object where entity_id = $elementID";
+	$vmware_object_results = $db->execQuery($vmware_object_id_sql);
+	$vmware_object_id = $vmware_object_results[0]['VMWARE_OBJECT_ID'];
 
 
 	$sql = "SELECT 
@@ -62,9 +74,7 @@ if ($query_type == "HostMem")
 	min(a.memory_usage) as MIN_MEM_USAGE,
 	max(a.memory_usage) as MAX_MEM_USAGE,
 	avg(a.memory_usage) as AVG_MEM_USAGE,
-	min(a.memory_total),
-	max(a.memory_total),
-	avg(a.memory_total),
+	a.memory_total		as TOTAL_CAPACITY,
 	day(s.sample_time), 
 	month(s.sample_time), 
 	year(s.sample_time) 
@@ -76,7 +86,7 @@ WHERE
 	s.sample_time >= '2014-04-01 00:00:00' AND 
 	s.sample_time < '2014-10-27 00:00:00'  AND
 	s.vmware_object_type = 'HostSystem' AND
-	s.vmware_object_id = 192
+	s.vmware_object_id = $vmware_object_id
 GROUP BY 
 	s.vmware_object_id,
 	year(s.sample_time),
@@ -101,26 +111,37 @@ GROUP BY
 		array_push($avg_mem_usage_array, $data);
 	}
 
-	/*
-	$my_series = array();
-	array_push($my_series, $name . " - Dialy Mem Min");
-	array_push($my_series, $min_mem_usage_array);
+	$capacity = intval($hostMemResults[0]['TOTAL_CAPACITY'] / 2);
+
+	if ($metricType == 'min')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Mem Min",
+			'capacity' => $capacity,
+			'series' => $min_mem_usage_array
+			);
+	}
+
+	if ($metricType == 'max')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Mem Max",
+			'capacity' => $capacity,
+			'series' => $max_mem_usage_array
+			);
+	}
+
+	if ($metricType == 'avg')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Mem Avg",
+			'capacity' => $capacity,
+			'series' => $avg_mem_usage_array
+			);
+	}
+
+
 	array_push($json, $my_series);
-
-	$my_series = array();
-	array_push($my_series, $name . " - Dialy Mem Max");
-	array_push($my_series, $max_mem_usage_array);
-	array_push($json, $my_series);
-	*/
-
-	$my_series = array(
-		'name' => $name . " - Dialy Mem Avg",
-		'capacity' => 65000000,
-		'series' => $avg_mem_usage_array
-		);
-	array_push($json, $my_series);
-
-
 	echo json_encode($json);
 
 
