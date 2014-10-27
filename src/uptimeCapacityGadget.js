@@ -17,6 +17,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		var refreshInterval = 30;
 		var chartTimer = null;
 		var api = new apiQueries();
+		var getMetricsPath = null;
 
 		var textStyle = {
 			fontFamily : "Verdana, Arial, Helvetica, sans-serif",
@@ -31,6 +32,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			chartType = options.chartType;
 			elementId = options.elementId;
 			refreshInterval = options.refreshInterval;
+			getMetricsPath = options.getMetricsPath;
 		}
 
 		var dataLabelsEnabled = false;
@@ -59,10 +61,11 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			var firstPoint = null;
 			var lastPoint = null;
+			var my_url = getMetricsPath + '&query_type=HostMem' 
 		    $.ajax({
 		        'async': true,
 		        'global': false,
-		        'url': '/dummydata.json',
+		        'url': my_url,
 		        'dataType': "json",
 		        'success': function (data) {
 
@@ -76,67 +79,88 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 						valueLength = value[1].length - 1;
 						lastPoint = value[1][valueLength];
-		        	});
-
-		        	timeseries = data[0][1];
 
 
-		        	xDeltaTotal = 0;
-		        	yDeltaTotal = 0;
-
-		        	$.each(timeseries, function(index, value) {
-		        		if (index >= 1)
-		        		{
-		        			xDelta = value[1] - timeseries[index - 1][1];
-		        			yDelta = value[0] - timeseries[index - 1][0];
-		        			xDeltaTotal = xDeltaTotal + xDelta;
-		        			yDeltaTotal = yDeltaTotal + yDelta;
-		        		}
-
-		        	});
-
-		        	xDelta = xDeltaTotal / timeseries.length;
-		        	yDelta = yDeltaTotal / timeseries.length;
-
-		        	capacityCap = 100;
+			        	timeseries = data[0][1];
 
 
-		        	LineOfBestFit = [];
+			        	xDeltaTotal = 0;
+			        	yDeltaTotal = 0;
 
-		        	current_Xvalue = firstPoint[1];
-		        	current_Yvalue = firstPoint[0];
-
-		        	while(current_Xvalue < capacityCap)
-		        	{
-		        		current_Yvalue = current_Yvalue + yDelta;
-		        		current_Xvalue = current_Xvalue + xDelta;
-		        		LineOfBestFit.push([current_Yvalue, current_Xvalue]);
-		        	}
-
-
-
-		        	doomsday = LineOfBestFit[LineOfBestFit.length - 1];//last point
-		        	
-		        	CapacityLine = [
-		        					[firstPoint[0], capacityCap],
-									[lastPoint[0], capacityCap],
-									[doomsday[0], capacityCap]
-
-								];
+			        	$.each(timeseries, function(index, value) {
+			        		if (index >= 1)
+			        		{
+			        			xDelta = value[1] - timeseries[index - 1][1];
+			        			yDelta = value[0] - timeseries[index - 1][0];
+			        			xDeltaTotal = xDeltaTotal + xDelta;
+			        			yDeltaTotal = yDeltaTotal + yDelta;
+			        		}
+			        	});
 
 
+			        	xDelta = xDeltaTotal / timeseries.length;
+			        	yDelta = yDeltaTotal / timeseries.length;
+
+			        	capacityCap = 65000000;
+
+
+			        	current_Xvalue = firstPoint[1];
+			        	current_Yvalue = firstPoint[0];
+
+			        	LineOfBestFitForRealMetrics = [[current_Yvalue, current_Xvalue]];
+
+
+			        	while( current_Yvalue <= lastPoint[0])
+			        	{
+			        		current_Yvalue = current_Yvalue + yDelta;
+			        		current_Xvalue = current_Xvalue + xDelta;
+			        		if (current_Yvalue <= lastPoint[0])
+			        		{
+				        		LineOfBestFitForRealMetrics.push([current_Yvalue, current_Xvalue]);
+				        	}
+			        	}
+
+			     		current_Xvalue = lastPoint[1];
+			        	current_Yvalue = lastPoint[0];
+			        	LineOfBestFitForEstimatedMetrics = [[current_Yvalue, current_Xvalue]];
+
+			        	while(current_Xvalue < capacityCap)
+			        	{
+			        		current_Yvalue = current_Yvalue + yDelta;
+			        		current_Xvalue = current_Xvalue + xDelta;
+			        		LineOfBestFitForEstimatedMetrics.push([current_Yvalue, current_Xvalue]);
+			        	} 
+
+			        	doomsday = LineOfBestFitForEstimatedMetrics[LineOfBestFitForEstimatedMetrics.length - 1];//last point
+			        	
+			        	CapacityLine = [
+			        					[firstPoint[0], capacityCap],
+										[lastPoint[0], capacityCap],
+										[doomsday[0], capacityCap]
+
+									];
 
 
 
-		        	chart.addSeries({
-		        		name: "Capacity",
-		        		data: CapacityLine
-		        	});
 
-					chart.addSeries({
-		        		name: "Usage",
-		        		data: LineOfBestFit
-		        	});
+
+			        	chart.addSeries({
+			        		name: "Capacity",
+			        		data: CapacityLine
+			        	});
+
+						chart.addSeries({
+			        		name: "Usage",
+			        		data: LineOfBestFitForRealMetrics
+			        	});
+
+			        	chart.addSeries({
+			        		name: "Estimated Usage",
+			        		data: LineOfBestFitForEstimatedMetrics
+			        	});
+
+
+					});
 
 		        	clearStatusBar();
 					dataLabelsEnabled = true;

@@ -1,4 +1,11 @@
 $(function() {
+
+	var currentURL = $("script#ownScript").attr("src");
+    var getMetricsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getmetrics.php';
+
+    var date = new Date();
+    var uptimeOffset = date.getTimezoneOffset()*60;
+
 	var api = new apiQueries();
 	var myChart = null;
 	var myChartDimensions = null;
@@ -183,6 +190,7 @@ $(function() {
 
 
 		myChart = new UPTIME.UptimeCapacityGadget({
+			getMetricsPath : getMetricsPath + "?uptime_offset=" + uptimeOffset,
 			dimensions : myChartDimensions,
 			chartDivId : "widgetChart",
 			chartType : uptimeCapacitySettings.chartTypeId,

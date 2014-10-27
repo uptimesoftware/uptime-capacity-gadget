@@ -73,10 +73,10 @@ FROM
 WHERE 
 	s.sample_id = a.sample_id AND 
 	s.vmware_object_id = o.vmware_object_id AND
-	s.sample_time >= '2014-09-20 14:18:01' AND 
-	s.sample_time < '2014-10-23 14:18:01'  AND
+	s.sample_time >= '2014-04-01 00:00:00' AND 
+	s.sample_time < '2014-10-27 00:00:00'  AND
 	s.vmware_object_type = 'HostSystem' AND
-	s.vmware_object_id = 191
+	s.vmware_object_id = 192
 GROUP BY 
 	s.vmware_object_id,
 	year(s.sample_time),
@@ -91,16 +91,17 @@ GROUP BY
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
 		$x = $sample_time * 1000;
 
-		$data = array($x, $row['MIN_MEM_USAGE']);
+		$data = array($x, floatval($row['MIN_MEM_USAGE']));
 		array_push($min_mem_usage_array, $data);
 
-		$data = array($x, $row['MAX_MEM_USAGE']);
+		$data = array($x, floatval($row['MAX_MEM_USAGE']));
 		array_push($max_mem_usage_array, $data);
 
-		$data = array($x, $row['AVG_MEM_USAGE']);
+		$data = array($x, floatval($row['AVG_MEM_USAGE']));
 		array_push($avg_mem_usage_array, $data);
 	}
 
+	/*
 	$my_series = array();
 	array_push($my_series, $name . " - Dialy Mem Min");
 	array_push($my_series, $min_mem_usage_array);
@@ -110,6 +111,7 @@ GROUP BY
 	array_push($my_series, $name . " - Dialy Mem Max");
 	array_push($my_series, $max_mem_usage_array);
 	array_push($json, $my_series);
+	*/
 
 	$my_series = array();
 	array_push($my_series, $name . " - Dialy Mem Avg");
