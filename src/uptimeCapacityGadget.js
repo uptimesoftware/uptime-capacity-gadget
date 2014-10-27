@@ -103,22 +103,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			        	capacityCap = 65000000;
 
+			        	LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
 
-			        	current_Xvalue = firstPoint[1];
-			        	current_Yvalue = firstPoint[0];
-
-			        	LineOfBestFitForRealMetrics = [[current_Yvalue, current_Xvalue]];
-
-
-			        	while( current_Yvalue <= lastPoint[0])
-			        	{
-			        		current_Yvalue = current_Yvalue + yDelta;
-			        		current_Xvalue = current_Xvalue + xDelta;
-			        		if (current_Yvalue <= lastPoint[0])
-			        		{
-				        		LineOfBestFitForRealMetrics.push([current_Yvalue, current_Xvalue]);
-				        	}
-			        	}
 
 			     		current_Xvalue = lastPoint[1];
 			        	current_Yvalue = lastPoint[0];
@@ -128,7 +114,10 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			        	{
 			        		current_Yvalue = current_Yvalue + yDelta;
 			        		current_Xvalue = current_Xvalue + xDelta;
-			        		LineOfBestFitForEstimatedMetrics.push([current_Yvalue, current_Xvalue]);
+			        		if (current_Xvalue >= capacityCap)
+			        		{
+			        			LineOfBestFitForEstimatedMetrics.push([current_Yvalue, current_Xvalue]);
+			        		}
 			        	} 
 
 			        	doomsday = LineOfBestFitForEstimatedMetrics[LineOfBestFitForEstimatedMetrics.length - 1];//last point
