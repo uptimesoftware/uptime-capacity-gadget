@@ -22,8 +22,8 @@ include("uptimeDB.php");
 if (isset($_GET['query_type'])){
 	$query_type = $_GET['query_type'];
 }
-if (isset($_GET['uptime_offset'])){
-	$offset = $_GET['uptime_offset'];
+if (isset($_GET['uptime_offest'])){
+	$offset = $_GET['uptime_offest'];
 }
 if (isset($_GET['time_frame'])){
 	$time_frame = $_GET['time_frame'];
@@ -113,12 +113,11 @@ GROUP BY
 	array_push($json, $my_series);
 	*/
 
-	$my_series = array(
-		'name' => $name . " - Dialy Mem Avg",
-		'capacity' => 65000000,
-		'series' => $avg_mem_usage_array
-		);
+	$my_series = array();
+	array_push($my_series, $name . " - Dialy Mem Avg");
+	array_push($my_series, $avg_mem_usage_array);
 	array_push($json, $my_series);
+
 
 
 	echo json_encode($json);

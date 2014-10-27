@@ -71,17 +71,17 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 		        	$.each(data, function(index, value) {
 		            	chart.addSeries({
-		            		name: value[0],
-		            		data: value[1]
+		            		name: value['name'],
+		            		data: value['series']
 						});
 						
-						firstPoint = value[1][0];
+						firstPoint = data[0]['series'][0];
 
-						valueLength = value[1].length - 1;
-						lastPoint = value[1][valueLength];
+						valueLength = data[0]['series'].length - 1;
+						lastPoint = data[0]['series'][valueLength];
 
 
-			        	timeseries = data[0][1];
+			        	timeseries = data[0]['series'];
 
 
 			        	xDeltaTotal = 0;
@@ -101,7 +101,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			        	xDelta = xDeltaTotal / timeseries.length;
 			        	yDelta = yDeltaTotal / timeseries.length;
 
-			        	capacityCap = 65000000;
+			        	capacityCap = data[0]['capacity'];
 
 			        	LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
 
