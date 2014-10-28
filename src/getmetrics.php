@@ -36,7 +36,7 @@ if (isset($_GET['metricType'])){
 	$metricType = $_GET['metricType'];
 }
 if (isset($_GET['element'])){
-	$elementID = $_GET['element'];
+	$vmware_object_id = $_GET['element'];
 }
 $json = array();
 $oneElement = array();
@@ -56,16 +56,7 @@ else
 }
 
 
-if (isset($elementID))
-{
-	//get the vmware_object_id for our entity_id
-	$vmware_object_id_sql = "select vmware_object_id from vmware_object where entity_id = $elementID";
-	$vmware_object_results = $db->execQuery($vmware_object_id_sql);
-	$vmware_object_id = $vmware_object_results[0]['VMWARE_OBJECT_ID'];
-}
-
-
-if ($query_type == "HostMem")
+if ($query_type == "Mem")
 {
 
 	$min_mem_usage_array = array();
@@ -90,7 +81,6 @@ if ($query_type == "HostMem")
 		s.sample_id = a.sample_id AND 
 		s.vmware_object_id = o.vmware_object_id AND
 		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-		s.vmware_object_type = 'HostSystem' AND
 		s.vmware_object_id = $vmware_object_id
 	GROUP BY 
 		s.vmware_object_id,
@@ -149,7 +139,7 @@ if ($query_type == "HostMem")
 	array_push($json, $my_series);
 	echo json_encode($json);
 }
-elseif ($query_type == "HostCpu")
+elseif ($query_type == "Cpu")
 {
 
 	$min_cpu_usage_array = array();
@@ -175,7 +165,6 @@ elseif ($query_type == "HostCpu")
 		s.sample_id = a.sample_id AND 
 		s.vmware_object_id = o.vmware_object_id AND
 		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-		s.vmware_object_type = 'HostSystem' AND
 		s.vmware_object_id = $vmware_object_id
 
 	GROUP BY 

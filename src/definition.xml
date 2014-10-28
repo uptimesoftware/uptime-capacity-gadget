@@ -51,10 +51,8 @@
 				<div id="availableQueries">
 					Query Type:
 					<select id="QueryTypeSelector" class="query-type-setting">
-						<option value="HostMem">Host Memory</option>
-						<option value="HostCpu">Host Cpu</option>
-						<option value="ClusterMem">Cluster Mem</option>
-						<option value="ClusterCpu">Cluster Cpu</option>
+						<option value="Mem">Memory</option>
+						<option value="Cpu">Cpu</option>
 						<option value="Datastore">Datastore</option>
 					</select>
 				</div>
@@ -65,7 +63,7 @@
 					</select>
 				</div>
 				<div id="MonthyTimeFrame">
-					Based on how much data?:
+					Based on how many months of data?:
 					<select id="MonthSelector" class="time-frame-selector">
 						<option value="1">1</option>
 						<option value="2">2</option>

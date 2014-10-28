@@ -120,7 +120,7 @@ $(function() {
 	function populateIdSelector() {
 		disableSettings();
 		dropdownselector = '#elementId';
-		url = getDropDownsPath + "?uptime_offset=14400&query_type=getEsxHosts";
+		url = getDropDownsPath + "?uptime_offset=14400&query_type=getVMobjects";
 		$(dropdownselector).empty().append($("<option />").val(-1).text("Loading..."));
 
 		$.getJSON(url, function(data) {
