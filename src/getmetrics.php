@@ -36,7 +36,7 @@ if (isset($_GET['metricType'])){
 	$metricType = $_GET['metricType'];
 }
 if (isset($_GET['element'])){
-	$elementID = $_GET['element'];
+	$vmware_object_id = $_GET['element'];
 }
 $json = array();
 $oneElement = array();
@@ -56,16 +56,7 @@ else
 }
 
 
-if (isset($elementID))
-{
-	//get the vmware_object_id for our entity_id
-	$vmware_object_id_sql = "select vmware_object_id from vmware_object where entity_id = $elementID";
-	$vmware_object_results = $db->execQuery($vmware_object_id_sql);
-	$vmware_object_id = $vmware_object_results[0]['VMWARE_OBJECT_ID'];
-}
-
-
-if ($query_type == "HostMem")
+if ($query_type == "Mem")
 {
 
 	$min_mem_usage_array = array();
@@ -90,7 +81,6 @@ if ($query_type == "HostMem")
 		s.sample_id = a.sample_id AND 
 		s.vmware_object_id = o.vmware_object_id AND
 		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-		s.vmware_object_type = 'HostSystem' AND
 		s.vmware_object_id = $vmware_object_id
 	GROUP BY 
 		s.vmware_object_id,
@@ -146,10 +136,20 @@ if ($query_type == "HostMem")
 	}
 
 
-	array_push($json, $my_series);
-	echo json_encode($json);
+	if (count($my_series['series']) > 0)
+	{
+		array_push($json, $my_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
 }
-elseif ($query_type == "HostCpu")
+elseif ($query_type == "Cpu")
 {
 
 	$min_cpu_usage_array = array();
@@ -175,7 +175,6 @@ elseif ($query_type == "HostCpu")
 		s.sample_id = a.sample_id AND 
 		s.vmware_object_id = o.vmware_object_id AND
 		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-		s.vmware_object_type = 'HostSystem' AND
 		s.vmware_object_id = $vmware_object_id
 
 	GROUP BY 
@@ -231,12 +230,152 @@ elseif ($query_type == "HostCpu")
 			);
 	}
 
+	if (count($my_series['series']) > 0)
+	{
+		array_push($json, $my_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
 
-	array_push($json, $my_series);
-	echo json_encode($json);
 
 
 
+
+}
+elseif ( $query_type == "Datastore")
+{
+
+	$min_datastore_usage_array = array();
+	$max_datastore_usage_array = array();
+	$avg_datastore_usage_array = array();
+	$min_datastore_prov_array = array();
+	$max_datastore_prov_array = array();
+	$avg_datastore_prov_array = array();
+
+
+
+	$datastoreSql = "SELECT 
+	s.vmware_object_id, 
+	o.vmware_name as NAME,
+	date(s.sample_time) as SAMPLE_TIME,
+	min(u.usage_total) as MIN_USAGE,
+	max(u.usage_total) as MAX_USAGE,
+	avg(u.usage_total) as AVG_USAGE,
+	min(u.provisioned) as MIN_PROV,
+	max(u.provisioned) as MAX_PROV,
+	avg(u.provisioned) as AVG_PROV,
+	u.capacity as TOTAL_CAPACITY,
+	day(s.sample_time), 
+	month(s.sample_time), 
+	year(s.sample_time) 
+FROM 
+	vmware_perf_datastore_usage u, vmware_perf_sample s, vmware_object o
+WHERE 
+	s.sample_id = u.sample_id AND 
+	s.vmware_object_id = o.vmware_object_id AND
+	s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
+	s.vmware_object_id = $vmware_object_id
+
+GROUP BY 
+	s.vmware_object_id,
+	year(s.sample_time),
+	month(s.sample_time), 
+	day(s.sample_time)";
+
+
+	$datastoreResults = $db->execQuery($datastoreSql);
+
+	$name = $datastoreResults[0]['NAME'];
+	$capacity = intval($datastoreResults[0]['TOTAL_CAPACITY']);
+
+	foreach ($datastoreResults as $index => $row) {
+		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
+		$x = $sample_time * 1000;
+
+		$data = array($x, floatval($row['MIN_USAGE']));
+		array_push($min_datastore_usage_array, $data);
+
+		$data = array($x, floatval($row['MAX_USAGE']));
+		array_push($max_datastore_usage_array, $data);
+
+		$data = array($x, floatval($row['AVG_USAGE']));
+		array_push($avg_datastore_usage_array, $data);
+
+		$data = array($x, floatval($row['MIN_PROV']));
+		array_push($min_datastore_prov_array, $data);
+
+		$data = array($x, floatval($row['MAX_PROV']));
+		array_push($max_datastore_prov_array, $data);
+
+		$data = array($x, floatval($row['AVG_PROV']));
+		array_push($avg_datastore_prov_array, $data);
+	}
+
+
+	if ($metricType == 'min')
+	{
+		$usage_series = array(
+			'name' => $name . " - Daily Actual Min",
+			'capacity' => $capacity,
+			'series' => $min_datastore_usage_array
+			);
+		$prov_series = array(
+			'name' => $name . " - Daily Provisioned Min",
+			'capacity' => $capacity,
+			'series' => $min_datastore_prov_array
+			);
+	}
+
+	if ($metricType == 'max')
+	{
+		$usage_series = array(
+			'name' => $name . " - Daily Actual Max",
+			'capacity' => $capacity,
+			'series' => $max_datastore_usage_array
+			);
+		$prov_series = array(
+			'name' => $name . " - Daily Provisioned Max",
+			'capacity' => $capacity,
+			'series' => $max_datastore_prov_array
+			);
+	}
+
+	if ($metricType == 'avg')
+	{
+		$usage_series = array(
+			'name' => $name . " - Daily Actual Avg",
+			'capacity' => $capacity,
+			'series' => $avg_datastore_usage_array
+			);
+		$prov_series = array(
+			'name' => $name . " - Daily Provisioned Avg",
+			'capacity' => $capacity,
+			'series' => $avg_datastore_prov_array
+			);
+	}
+
+	if (count($usage_series['series']) > 0)
+	{
+		array_push($json, $usage_series);
+	}
+	if (count($prov_series['series']) > 0)
+	{
+		array_push($json, $prov_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
 
 
 }

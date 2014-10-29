@@ -51,10 +51,8 @@
 				<div id="availableQueries">
 					Query Type:
 					<select id="QueryTypeSelector" class="query-type-setting">
-						<option value="HostMem">Host Memory</option>
-						<option value="HostCpu">Host Cpu</option>
-						<option value="ClusterMem">Cluster Mem</option>
-						<option value="ClusterCpu">Cluster Cpu</option>
+						<option value="Mem">Memory</option>
+						<option value="Cpu">Cpu</option>
 						<option value="Datastore">Datastore</option>
 					</select>
 				</div>
@@ -64,16 +62,35 @@
 						<option value="-1">Loading...</option>
 					</select>
 				</div>
+				<div id="MonthyTimeFrame">
+					Based on how many months of data?:
+					<select id="MonthSelector" class="time-frame-selector">
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3" selected="selected">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+						<option value="7">7</option>
+						<option value="8">8</option>
+						<option value="9">9</option>
+						<option value="10">10</option>
+					</select>
+				</div>
+				<div id="CapacitySliderDiv">
+					Capacity Buffer:
+					<input type="range" name="capacityBuffer" id="capacitySlider" min="50" max="150"><div id="CurCapacityBuffer"></div>
 				<br/>
-				Based on what value:
-				<br/>
-				<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
-				<br/>
-				<input type="radio" id="max" class="element-status-setting" name="metricType" value="max"> Max
-				<br/>
-				<input type="radio" id="min" class="element-status-setting" name="metricType" value="min"> Min
-				<br/>
-				<br/>
+				<div id="MetricType">
+					Based on the daily what?:
+					<br/>
+					<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
+					<br/>
+					<input type="radio" id="max" class="element-status-setting" name="metricType" value="max"> Max
+					<br/>
+					<input type="radio" id="min" class="element-status-setting" name="metricType" value="min"> Min
+					<br/>
+				</div>
 				<button id="closeSettings">Close</button>
 			</form>
 		</div>

@@ -21,7 +21,10 @@ $(function() {
 
 	$('.query-type-setting').change(settingChanged);
 	$('.element-status-setting').change(settingChanged);
+	$('.time-frame-selector').change(settingChanged);
 	$('#widgetOptions input[name=metricType]:radio').change(settingChanged);
+	$('#capacitySlider').change(changeCapacityBuffer);
+
 
 	$("#closeSettings").click(function() {
 		$("#widgetSettings").slideUp();
@@ -66,7 +69,9 @@ $(function() {
 	function settingChanged() {
 		uptimeCapacitySettings.metricType = $("#widgetOptions input[name=metricType]:radio:checked").val();
 		uptimeCapacitySettings.elementId = $('#elementId').find(":selected").val();
+		uptimeCapacitySettings.timeFrame = $('#MonthSelector').find(":selected").val();
 		uptimeCapacitySettings.queryType = $('#QueryTypeSelector').find(":selected").val();
+		uptimeCapacitySettings.capacityBuffer = $("#capacitySlider").val();
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
 	}
@@ -117,7 +122,7 @@ $(function() {
 	function populateIdSelector() {
 		disableSettings();
 		dropdownselector = '#elementId';
-		url = getDropDownsPath + "?uptime_offset=14400&query_type=getEsxHosts";
+		url = getDropDownsPath + "?uptime_offset=14400&query_type=getVMobjects";
 		$(dropdownselector).empty().append($("<option />").val(-1).text("Loading..."));
 
 		$.getJSON(url, function(data) {
@@ -145,6 +150,9 @@ $(function() {
 		if (settings) {
 			$("#elementId").val(settings.elementId);
 			$("#QueryTypeSelector").val(settings.queryType);
+			$("#MonthSelector").val(settings.timeFrame);
+			$("#capacitySlider").val(settings.capacityBuffer);
+			$("#CurCapacityBuffer").html(settings.capacityBuffer + "%");
 			$("#" + settings.metricType).prop("checked", true);
 			$.extend(uptimeCapacitySettings, settings);
 			displayChart();
@@ -197,10 +205,20 @@ $(function() {
 			metricType : uptimeCapacitySettings.metricType,
 			queryType : uptimeCapacitySettings.queryType,
 			elementId : uptimeCapacitySettings.elementId,
+			timeFrame : uptimeCapacitySettings.timeFrame,
+			capacityBuffer: uptimeCapacitySettings.capacityBuffer
 		}, displayStatusBar, clearStatusBar);
 
 		myChart.render();
 		$("body").height($(window).height());
 	}
+
+	function changeCapacityBuffer() {
+		buffer = $("#capacitySlider").val();
+		$("#CurCapacityBuffer").html(buffer + "%");
+		settingChanged();
+	}
+
+
 
 });

@@ -79,7 +79,28 @@ if ($query_type == "getEsxHosts")
 
 }
 
-	
+elseif ($query_type == "getVMobjects")
+{
+    $db = new uptimeDB;
+    $db->connectDB();
+
+    $getVMobjectsSql = 'select vmware_object_id, display_name
+
+     from vmware_object
+     where mor_type in ("ClusterComputeResource","HostSystem","Datastore" )  ';
+
+    $results = $db->execQuery($getVMobjectsSql);
+    foreach ($results as $row)
+    {
+        $id = $row['VMWARE_OBJECT_ID'];
+        $name = $row['DISPLAY_NAME'];
+        $json[$name] = $id;
+    }
+
+
+	ksort($json);
+    echo json_encode($json);
+}
 
 
     

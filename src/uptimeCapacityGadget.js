@@ -15,7 +15,9 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		var elementId = null;
 		var metricType = null;
 		var queryType = null;
+		var timeFrame = null;
 		var chartTimer = null;
+		var capacityBuffer = 100;
 		var api = new apiQueries();
 		var getMetricsPath = null;
 
@@ -32,6 +34,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			metricType = options.metricType;
 			queryType = options.queryType;
 			elementId = options.elementId;
+			timeFrame = options.timeFrame;
+			capacityBuffer = options.capacityBuffer;
 			getMetricsPath = options.getMetricsPath;
 		}
 
@@ -61,7 +65,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			var firstPoint = null;
 			var lastPoint = null;
-			var my_url = getMetricsPath + '&query_type=' + queryType + '&metricType='  + metricType + "&element=" + elementId;
+			var my_url = getMetricsPath + '&query_type=' + queryType + '&metricType='  + metricType + "&element=" + elementId + "&time_frame=" + timeFrame;
 		    $.ajax({
 		        'async': true,
 		        'global': false,
@@ -74,93 +78,122 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		            		name: value['name'],
 		            		data: value['series']
 						});
-						
-						firstPoint = data[0]['series'][0];
 
-						valueLength = data[0]['series'].length - 1;
-						lastPoint = data[0]['series'][valueLength];
-
-
-			        	timeseries = data[0]['series'];
-
-
-			        	xDeltaTotal = 0;
-			        	yDeltaTotal = 0;
-
-			        	$.each(timeseries, function(index, value) {
-			        		if (index >= 1)
-			        		{
-			        			xDelta = value[1] - timeseries[index - 1][1];
-			        			yDelta = value[0] - timeseries[index - 1][0];
-			        			xDeltaTotal = xDeltaTotal + xDelta;
-			        			yDeltaTotal = yDeltaTotal + yDelta;
-			        		}
-			        	});
-
-
-			        	xDelta = xDeltaTotal / timeseries.length;
-			        	yDelta = yDeltaTotal / timeseries.length;
-
-			        	capacityCap = data[0]['capacity'];
-
-			        	LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
-
-
-			     		current_Xvalue = lastPoint[1];
-			        	current_Yvalue = lastPoint[0];
-			        	LineOfBestFitForEstimatedMetrics = [[current_Yvalue, current_Xvalue]];
-
-			        	if ( current_Xvalue < capacityCap && xDelta > 0)
-			        	{
-				        	while(current_Xvalue < capacityCap)
-				        	{
-				        		current_Yvalue = current_Yvalue + yDelta;
-				        		current_Xvalue = current_Xvalue + xDelta;
-				        		if (current_Xvalue >= capacityCap)
-				        		{
-				        			LineOfBestFitForEstimatedMetrics.push([current_Yvalue, current_Xvalue]);
-				        		}
-				        	} 
-
-			        	}
-			        	doomsday = LineOfBestFitForEstimatedMetrics[LineOfBestFitForEstimatedMetrics.length - 1];//last point
-			        	
-			        	CapacityLine = [
-			        					[firstPoint[0], capacityCap],
-										[lastPoint[0], capacityCap],
-										[doomsday[0], capacityCap]
-
-									];
-
-
-
-						countDowntillDoomsday(lastPoint, doomsday);
-
-			        	chart.addSeries({
-			        		name: "Capacity",
-			        		data: CapacityLine
-			        	});
-
-						chart.addSeries({
-			        		name: "Usage",
-			        		data: LineOfBestFitForRealMetrics
-			        	});
-
-			        	chart.addSeries({
-			        		name: "Estimated Usage",
-			        		data: LineOfBestFitForEstimatedMetrics
-			        	});
-
-
+						addCapacityLines(value);
 					});
 
 		        	clearStatusBar();
 					dataLabelsEnabled = true;
 					chart.hideLoading();
+		        },
+		        'error': function () {
+		        	$("#countDownTillDoomsDay").html("No Data");
+		        	chart.hideLoading();
 		        }
 	    	});	
 		}
 
+		function addCapacityLines(data) {
+
+			firstPoint = data['series'][0];
+
+			valueLength = data['series'].length - 1;
+			lastPoint = data['series'][valueLength];
+
+			name = data['name'];
+
+
+        	timeseries = data['series'];
+
+
+        	xDeltaTotal = 0;
+        	yDeltaTotal = 0;
+
+        	$.each(timeseries, function(index, value) {
+        		if (index >= 1)
+        		{
+        			xDelta = value[1] - timeseries[index - 1][1];
+        			yDelta = value[0] - timeseries[index - 1][0];
+        			xDeltaTotal = xDeltaTotal + xDelta;
+        			yDeltaTotal = yDeltaTotal + yDelta;
+        		}
+        	});
+
+
+        	xDelta = xDeltaTotal / (timeseries.length -1);
+        	yDelta = yDeltaTotal / (timeseries.length -1);
+
+        	capacityCap = data['capacity'];
+        	capacityCapBuffered = data['capacity'] * ( capacityBuffer / 100);
+
+        	LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
+
+
+     		last_Xvalue = lastPoint[1];
+        	last_Yvalue = lastPoint[0];
+        	
+
+        	//let see if we can just figure out when Xvalue = Capacity and then the date to go with it
+        	capacityLeft = capacityCap - last_Xvalue;
+        	timeToGo = capacityLeft / xDelta;
+        	timeToGoInMS = timeToGo * yDelta;
+        	actualTime = timeToGoInMS + last_Yvalue;
+
+        	CapacityLine = [[firstPoint[0], capacityCap],
+							[lastPoint[0], capacityCap]];
+
+			BufferedCapacityLine = [[firstPoint[0], capacityCapBuffered],
+									[lastPoint[0], capacityCapBuffered]];
+
+			LineOfBestFitForEstimatedMetrics = [lastPoint];
+
+        	if (xDelta > 0)
+   			{
+   			   	BufferedCapacityPoint = figureOutCapacity(capacityCapBuffered, last_Xvalue, last_Yvalue, xDelta, yDelta);
+        		CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
+        	
+        		CapacityLine.push(CapacityPoint);
+        		BufferedCapacityPoint.push(BufferedCapacityPoint);
+
+
+				countDowntillDoomsday(lastPoint, CapacityPoint);
+
+				if (BufferedCapacityPoint[0] > CapacityPoint[0])
+				{
+					LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
+					LineOfBestFitForEstimatedMetrics.push(BufferedCapacityPoint);
+					CapacityLine.push([BufferedCapacityPoint[0], CapacityPoint[1]]);
+
+				}
+				else
+				{
+					LineOfBestFitForEstimatedMetrics.push(BufferedCapacityPoint);
+					LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
+					BufferedCapacityLine.push([CapacityPoint[0], BufferedCapacityPoint[1]]);
+				}
+			}
+
+
+        	chart.addSeries({
+        		name: "Capacity",
+        		data: CapacityLine
+        	});
+
+        	chart.addSeries({
+        		name: "Buffered Capacity",
+        		data: BufferedCapacityLine
+        	});
+
+			chart.addSeries({
+        		name: name + " - Usage",
+        		data: LineOfBestFitForRealMetrics
+        	});
+
+        	chart.addSeries({
+        		name: name + " - Est",
+        		data: LineOfBestFitForEstimatedMetrics
+        	});
+		}
 
 		function countDowntillDoomsday(startpoint, endpoint)
 		{
@@ -170,6 +203,18 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			time_left =  (endtime - starttime);
 			time_left_in_days = Math.round(time_left / 1000 / 60 / 60 / 24);
 			$("#countDownTillDoomsDay").html("Days left till doomsday: " + time_left_in_days);
+		}
+
+		function figureOutCapacity( targetCapacity, startX, startY, deltaX, deltaY )
+		{
+
+			CapacityLeft = targetCapacity - startX;
+        	timeToGo = CapacityLeft / deltaX;
+        	timeToGoInMS = timeToGo * deltaY;
+        	actualTime = timeToGoInMS + startY;
+
+        	return [actualTime, targetCapacity ];
+
 		}
 
 		// public functions for this function/class
