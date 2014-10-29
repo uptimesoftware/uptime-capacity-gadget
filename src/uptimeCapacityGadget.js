@@ -83,6 +83,10 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		        	clearStatusBar();
 					dataLabelsEnabled = true;
 					chart.hideLoading();
+		        },
+		        'error': function () {
+		        	$("#countDownTillDoomsDay").html("No Data");
+		        	chart.hideLoading();
 		        }
 	    	});	
 		}
@@ -93,6 +97,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			valueLength = data['series'].length - 1;
 			lastPoint = data['series'][valueLength];
+
+			name = data['name'];
 
 
         	timeseries = data['series'];
@@ -156,12 +162,12 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         	});
 
 			chart.addSeries({
-        		name: "Usage",
+        		name: name + " - Usage",
         		data: LineOfBestFitForRealMetrics
         	});
 
         	chart.addSeries({
-        		name: "Estimated Usage",
+        		name: name + " - Est",
         		data: LineOfBestFitForEstimatedMetrics
         	});
 		}

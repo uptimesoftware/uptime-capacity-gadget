@@ -136,8 +136,18 @@ if ($query_type == "Mem")
 	}
 
 
-	array_push($json, $my_series);
-	echo json_encode($json);
+	if (count($my_series['series']) > 0)
+	{
+		array_push($json, $my_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
 }
 elseif ($query_type == "Cpu")
 {
@@ -220,9 +230,18 @@ elseif ($query_type == "Cpu")
 			);
 	}
 
-
-	array_push($json, $my_series);
-	echo json_encode($json);
+	if (count($my_series['series']) > 0)
+	{
+		array_push($json, $my_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
 
 
 
@@ -302,7 +321,7 @@ GROUP BY
 	if ($metricType == 'min')
 	{
 		$usage_series = array(
-			'name' => $name . " - Daily Usage Min",
+			'name' => $name . " - Daily Actual Min",
 			'capacity' => $capacity,
 			'series' => $min_datastore_usage_array
 			);
@@ -316,12 +335,12 @@ GROUP BY
 	if ($metricType == 'max')
 	{
 		$usage_series = array(
-			'name' => $name . " - Daily Usage Max",
+			'name' => $name . " - Daily Actual Max",
 			'capacity' => $capacity,
 			'series' => $max_datastore_usage_array
 			);
 		$prov_series = array(
-			'name' => $name . " - Daily Provisioned Min",
+			'name' => $name . " - Daily Provisioned Max",
 			'capacity' => $capacity,
 			'series' => $max_datastore_prov_array
 			);
@@ -330,20 +349,33 @@ GROUP BY
 	if ($metricType == 'avg')
 	{
 		$usage_series = array(
-			'name' => $name . " - Daily Usage Avg",
+			'name' => $name . " - Daily Actual Avg",
 			'capacity' => $capacity,
 			'series' => $avg_datastore_usage_array
 			);
 		$prov_series = array(
-			'name' => $name . " - Daily Provisioned Min",
+			'name' => $name . " - Daily Provisioned Avg",
 			'capacity' => $capacity,
 			'series' => $avg_datastore_prov_array
 			);
 	}
 
-	array_push($json, $usage_series);
-	array_push($json, $prov_series);
-	echo json_encode($json);
+	if (count($usage_series['series']) > 0)
+	{
+		array_push($json, $usage_series);
+	}
+	if (count($prov_series['series']) > 0)
+	{
+		array_push($json, $prov_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
 
 
 }
