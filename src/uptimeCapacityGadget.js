@@ -17,6 +17,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		var queryType = null;
 		var timeFrame = null;
 		var chartTimer = null;
+		var capacityBuffer = 100;
 		var api = new apiQueries();
 		var getMetricsPath = null;
 
@@ -34,6 +35,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 			queryType = options.queryType;
 			elementId = options.elementId;
 			timeFrame = options.timeFrame;
+			capacityBuffer = options.capacityBuffer;
 			getMetricsPath = options.getMetricsPath;
 		}
 
@@ -122,6 +124,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         	yDelta = yDeltaTotal / timeseries.length;
 
         	capacityCap = data['capacity'];
+        	capacityCapBuffered = data['capacity'] * ( capacityBuffer / 100);
 
         	LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
 
@@ -130,7 +133,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         	current_Yvalue = lastPoint[0];
         	LineOfBestFitForEstimatedMetrics = [[current_Yvalue, current_Xvalue]];
 
-        	if ( current_Xvalue < capacityCap && xDelta > 0)
+        	if ( xDelta > 0)
         	{
 	        	while(current_Xvalue < capacityCap)
 	        	{
@@ -149,7 +152,11 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         					[firstPoint[0], capacityCap],
 							[lastPoint[0], capacityCap],
 							[doomsday[0], capacityCap]
-
+						];
+			BufferedCapacityLine = [
+							[firstPoint[0], capacityCapBuffered],
+							[lastPoint[0], capacityCapBuffered],
+							[doomsday[0], capacityCapBuffered]
 						];
 
 
@@ -159,6 +166,11 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         	chart.addSeries({
         		name: "Capacity",
         		data: CapacityLine
+        	});
+
+        	chart.addSeries({
+        		name: "Buffered Capacity",
+        		data: BufferedCapacityLine
         	});
 
 			chart.addSeries({

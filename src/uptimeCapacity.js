@@ -23,6 +23,7 @@ $(function() {
 	$('.element-status-setting').change(settingChanged);
 	$('.time-frame-selector').change(settingChanged);
 	$('#widgetOptions input[name=metricType]:radio').change(settingChanged);
+	$('#capacitySlider').change(changeCapacityBuffer);
 
 
 	$("#closeSettings").click(function() {
@@ -70,6 +71,7 @@ $(function() {
 		uptimeCapacitySettings.elementId = $('#elementId').find(":selected").val();
 		uptimeCapacitySettings.timeFrame = $('#MonthSelector').find(":selected").val();
 		uptimeCapacitySettings.queryType = $('#QueryTypeSelector').find(":selected").val();
+		uptimeCapacitySettings.capacityBuffer = $("#capacitySlider").val();
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
 	}
@@ -149,6 +151,8 @@ $(function() {
 			$("#elementId").val(settings.elementId);
 			$("#QueryTypeSelector").val(settings.queryType);
 			$("#MonthSelector").val(settings.timeFrame);
+			$("#capacitySlider").val(settings.capacityBuffer);
+			$("#CurCapacityBuffer").html(settings.capacityBuffer + "%");
 			$("#" + settings.metricType).prop("checked", true);
 			$.extend(uptimeCapacitySettings, settings);
 			displayChart();
@@ -201,11 +205,20 @@ $(function() {
 			metricType : uptimeCapacitySettings.metricType,
 			queryType : uptimeCapacitySettings.queryType,
 			elementId : uptimeCapacitySettings.elementId,
-			timeFrame : uptimeCapacitySettings.timeFrame
+			timeFrame : uptimeCapacitySettings.timeFrame,
+			capacityBuffer: uptimeCapacitySettings.capacityBuffer
 		}, displayStatusBar, clearStatusBar);
 
 		myChart.render();
 		$("body").height($(window).height());
 	}
+
+	function changeCapacityBuffer() {
+		buffer = $("#capacitySlider").val();
+		$("#CurCapacityBuffer").html(buffer + "%");
+		settingChanged();
+	}
+
+
 
 });
