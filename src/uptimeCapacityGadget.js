@@ -147,7 +147,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			LineOfBestFitForEstimatedMetrics = [lastPoint];
 
-        	if (xDelta > 0)
+        	if ( xDelta > 0 && capacityCap > lastPoint[1])
    			{
    			   	BufferedCapacityPoint = figureOutCapacity(capacityCapBuffered, last_Xvalue, last_Yvalue, xDelta, yDelta);
         		CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
@@ -156,7 +156,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         		BufferedCapacityLine.push(BufferedCapacityPoint);
 
 
-				countDowntillDoomsday(lastPoint, CapacityPoint);
+				countDowntillDoomsday(lastPoint, CapacityPoint, BufferedCapacityPoint, xDelta);
 
 				if (BufferedCapacityPoint[0] > CapacityPoint[0])
 				{
@@ -171,6 +171,10 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 					LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
 					BufferedCapacityLine.push([CapacityPoint[0], BufferedCapacityPoint[1]]);
 				}
+			}
+			else
+			{
+				justAddTitletoDoomsday();
 			}
 
 
@@ -195,14 +199,37 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         	});
 		}
 
-		function countDowntillDoomsday(startpoint, endpoint)
+		function countDowntillDoomsday(startpoint, capacityPoint, bufferedcapacityPoint, Delta)
 		{
 			$("#countDownTillDoomsDay").html("");
 			starttime = startpoint[0];
-			endtime = endpoint[0];
+			endtime = capacityPoint[0];
+
+			//regular capacity
 			time_left =  (endtime - starttime);
-			time_left_in_days = Math.round(time_left / 1000 / 60 / 60 / 24);
-			$("#countDownTillDoomsDay").html("Days left till doomsday: " + time_left_in_days);
+			time_left_in_days_till_Cap = Math.round(time_left / 1000 / 60 / 60 / 24);
+
+			//buffered capacity
+			endtime = bufferedcapacityPoint[0];
+			time_left =  (endtime - starttime);
+			time_left_in_days_till_BuffedCap = Math.round(time_left / 1000 / 60 / 60 / 24);
+
+
+			overview_string = "";
+			overview_string += "" + metricType + " " + queryType + " usage over " + timeFrame + " months<br>"
+			overview_string += "Days left till Capacity: " + time_left_in_days_till_Cap + "<br>";
+			overview_string += "Days left till Buffered Capacity: " + time_left_in_days_till_BuffedCap + "<br>";
+			overview_string += "Average Daily Growth: " + Delta;
+			$("#countDownTillDoomsDay").html(overview_string);
+		}
+
+		function justAddTitletoDoomsday()
+		{
+			$("#countDownTillDoomsDay").html("");
+
+			overview_string = "Looking at " + metricType + " " + queryType + " usage over " + timeFrame + " months<br>"
+			$("#countDownTillDoomsDay").html(overview_string);
+
 		}
 
 		function figureOutCapacity( targetCapacity, startX, startY, deltaX, deltaY )
