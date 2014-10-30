@@ -94,7 +94,10 @@ elseif ($query_type == "getVMobjects")
     {
         $id = $row['VMWARE_OBJECT_ID'];
         $name = $row['DISPLAY_NAME'];
-        $json[$name] = $id;
+        if (!preg_match("/deleted/", $name))
+        {
+            $json[$name] = $id;
+        }
     }
 
 
