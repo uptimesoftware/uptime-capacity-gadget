@@ -153,7 +153,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         		CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
         	
         		CapacityLine.push(CapacityPoint);
-        		BufferedCapacityPoint.push(BufferedCapacityPoint);
+        		BufferedCapacityLine.push(BufferedCapacityPoint);
 
 
 				countDowntillDoomsday(lastPoint, CapacityPoint);
