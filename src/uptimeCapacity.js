@@ -10,11 +10,7 @@ $(function() {
 	var api = new apiQueries();
 	var myChart = null;
 	var myChartDimensions = null;
-	var uptimeCapacitySettings = {
-		entityId : -1,
-		refreshInterval : 30,
-		chartTypeId : "pie",
-	};
+	var uptimeCapacitySettings = {};
 	var divsToDim = [ '#widgetChart', '#widgetSettings' ];
 
 	$("#widgetSettings").hide();
@@ -98,7 +94,6 @@ $(function() {
 
 		$("#widgetOptions input[name=chartType]").filter('[value=' + uptimeCapacitySettings.chartTypeId + ']').prop('checked',
 				true);
-		$('#elementId').val(uptimeCapacitySettings.elementId);
 
 		$("#widgetSettings").slideDown();
 		$("body").height($(window).height());
@@ -133,6 +128,11 @@ $(function() {
 			$.each(data, function(key, val) {
 				$(dropdownselector).append($("<option />").val(val).text(key));
 			});
+
+			if ( uptimeCapacitySettings.elementId)
+			{
+				$('#elementId').val(uptimeCapacitySettings.elementId);
+			}
 
 			if (!myChart) {
 				settingChanged();
