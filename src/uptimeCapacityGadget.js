@@ -94,153 +94,197 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		}
 
 		function addCapacityLines(data) {
-
-			firstPoint = data['series'][0];
-
-			valueLength = data['series'].length - 1;
-			lastPoint = data['series'][valueLength];
-
-			name = data['name'];
+            //draw the various capacity and estimated usage lines
 
 
-        	timeseries = data['series'];
+
+            //get the first and last points from the time series data
+            timeseries = data['series'];
+            firstPoint = timeseries[0];
+            valueLength = timeseries.length - 1;
+            lastPoint = timeseries[valueLength];
+
+            dataname = data['name'];
+
+            last_Xvalue = lastPoint[0];
+            last_Yvalue = lastPoint[1];
 
 
-        	xDeltaTotal = 0;
-        	yDeltaTotal = 0;
-
-        	$.each(timeseries, function(index, value) {
-        		if (index >= 1)
-        		{
-        			xDelta = value[1] - timeseries[index - 1][1];
-        			yDelta = value[0] - timeseries[index - 1][0];
-        			xDeltaTotal = xDeltaTotal + xDelta;
-        			yDeltaTotal = yDeltaTotal + yDelta;
-        		}
-        	});
 
 
-        	xDelta = xDeltaTotal / (timeseries.length -1);
-        	yDelta = yDeltaTotal / (timeseries.length -1);
+            xDeltaTotal = 0;
+            yDeltaTotal = 0;
+            //total up the difference between all the daily points
+            $.each(timeseries, function(index, value) {
+                if (index >= 1)
+                {
+                    xDelta = value[0] - timeseries[index - 1][0];
+                    yDelta = value[1] - timeseries[index - 1][1];
+                    xDeltaTotal = xDeltaTotal + xDelta;
+                    yDeltaTotal = yDeltaTotal + yDelta;
+                }
+            });
 
-        	capacityCap = data['capacity'];
-        	capacityCapBuffered = data['capacity'] * ( capacityBuffer / 100);
+            //get the average delta for both X and Y
+            xDelta = xDeltaTotal / (timeseries.length -1);//should be one day in ms
+            yDelta = yDeltaTotal / (timeseries.length -1);
 
-        	LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
-
-
-     		last_Xvalue = lastPoint[1];
-        	last_Yvalue = lastPoint[0];
-        	
-
-        	//let see if we can just figure out when Xvalue = Capacity and then the date to go with it
-        	capacityLeft = capacityCap - last_Xvalue;
-        	timeToGo = capacityLeft / xDelta;
-        	timeToGoInMS = timeToGo * yDelta;
-        	actualTime = timeToGoInMS + last_Yvalue;
-
-        	CapacityLine = [[firstPoint[0], capacityCap],
-							[lastPoint[0], capacityCap]];
-
-			BufferedCapacityLine = [[firstPoint[0], capacityCapBuffered],
-									[lastPoint[0], capacityCapBuffered]];
-
-			LineOfBestFitForEstimatedMetrics = [lastPoint];
-
-        	if ( xDelta > 0 && capacityCap > lastPoint[1])
-   			{
-   			   	BufferedCapacityPoint = figureOutCapacity(capacityCapBuffered, last_Xvalue, last_Yvalue, xDelta, yDelta);
-        		CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
-        	
-        		CapacityLine.push(CapacityPoint);
-        		BufferedCapacityLine.push(BufferedCapacityPoint);
+            //get the total capacity value from our json data and figure out the buffered capacity cap
+            capacityCap = data['capacity'];
+            capacityCapBuffered = data['capacity'] * ( capacityBuffer / 100);
 
 
-				countDowntillDoomsday(lastPoint, CapacityPoint, BufferedCapacityPoint, xDelta);
+            //setup the various lines we'll need to draw
+            CapacityLine = [[firstPoint[0], capacityCap]];
 
-				if (BufferedCapacityPoint[0] > CapacityPoint[0])
-				{
-					LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
-					LineOfBestFitForEstimatedMetrics.push(BufferedCapacityPoint);
-					CapacityLine.push([BufferedCapacityPoint[0], CapacityPoint[1]]);
+            BufferedCapacityLine = [[firstPoint[0], capacityCapBuffered]];
 
-				}
-				else
-				{
-					LineOfBestFitForEstimatedMetrics.push(BufferedCapacityPoint);
-					LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
-					BufferedCapacityLine.push([CapacityPoint[0], BufferedCapacityPoint[1]]);
-				}
-			}
-			else
-			{
-				justAddTitletoDoomsday();
-			}
+            LineOfBestFitForEstimatedMetrics = [lastPoint];
+
+            LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
 
 
-        	chart.addSeries({
-        		name: "Capacity",
-        		data: CapacityLine
-        	});
+            //setup some empty points as well
+            bufferedcapacityWithNewVms = null;
+            CapacityPoint = null;
+            BufferedCapacityPoint = null;
 
-        	chart.addSeries({
-        		name: "Buffered Capacity",
-        		data: BufferedCapacityLine
-        	});
+            //we only need to figure out the capacity points if things are actualy trending upwards
+            if ( yDelta > 0 )
+            {
+                //if the starting point for our estimated usage line is below our capacity Cap
+                if( capacityCap > last_Yvalue)
+                {
+                    CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
+                    CapacityLine.push(CapacityPoint);
+                    
+                    BufferedCapacityPoint = figureOutCapacity(capacityCapBuffered, last_Xvalue, last_Yvalue, xDelta, yDelta);
+                    BufferedCapacityLine.push(BufferedCapacityPoint);
 
-			chart.addSeries({
-        		name: name + " - Usage",
-        		data: LineOfBestFitForRealMetrics
-        	});
+                     
+                    //pass all these points along, so that we can populate the info panel.
+                    fillInInfoPanel(lastPoint, CapacityPoint, BufferedCapacityPoint, yDelta, data['unit']);
 
-        	chart.addSeries({
-        		name: name + " - Est",
-        		data: LineOfBestFitForEstimatedMetrics
-        	});
-		}
+                    //fill out the rest of the capacity Lines
+                    if (BufferedCapacityPoint[1] > CapacityPoint[1])
+                    {
+                        //if the BufferedCapacity is greater then our real capacity
+                        //then the CapacityPoint will naturely come first on the LineOfBestFit
+                        LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
+                        LineOfBestFitForEstimatedMetrics.push(BufferedCapacityPoint);
+                        //this also means that the BufferedCapcityLine is longer
+                        //so we need to add another point to the real Capacity Line
+                        CapacityLine.push([BufferedCapacityPoint[0], CapacityPoint[1]]);
 
-		function countDowntillDoomsday(startpoint, capacityPoint, bufferedcapacityPoint, Delta)
-		{
-			$("#countDownTillDoomsDay").html("");
-			starttime = startpoint[0];
-			endtime = capacityPoint[0];
+                    }
+                    else
+                    {
+                        //otherwise if buffered capacity is less then real capacity
+                        //then the buffered capacity point comes first
+                        LineOfBestFitForEstimatedMetrics.push(BufferedCapacityPoint);
+                        LineOfBestFitForEstimatedMetrics.push(CapacityPoint);
+                        //add an extra point to the BufferedCapacityLine
+                        BufferedCapacityLine.push([CapacityPoint[0], BufferedCapacityPoint[1]]);
+                    }
+                }
+            }
+            //if things aren't trending upwards then just extend our capacity Lines and fill out the info panel
+            else
+            {
+                CapacityLine.push([lastPoint[0], capacityCap]);
+                BufferedCapacityLine.push([lastPoint[0], capacityCapBuffered]);
+                justAddTitletoDoomsday(yDelta, data['unit']);
+            }
 
-			//regular capacity
-			time_left =  (endtime - starttime);
-			time_left_in_days_till_Cap = Math.round(time_left / 1000 / 60 / 60 / 24);
 
-			//buffered capacity
-			endtime = bufferedcapacityPoint[0];
-			time_left =  (endtime - starttime);
-			time_left_in_days_till_BuffedCap = Math.round(time_left / 1000 / 60 / 60 / 24);
+            //draw the actual lines on the chart
+            chart.addSeries({
+                name: "Capacity",
+                zindex: 1,
+                data: CapacityLine
+            });
+
+            //only draw the buffered Capacity Line if it's different then the real capacity
+            if (capacityBuffer != 100)
+            {
+                chart.addSeries({
+                    name: "Buffered Capacity",
+                    zindex: 1,
+                    data: BufferedCapacityLine
+                });
+            }
+
+            chart.addSeries({
+                name: dataname + " - Usage",
+                zindex: 2,
+                data: LineOfBestFitForRealMetrics
+            });
+
+            chart.addSeries({
+                name: dataname + " - Est",
+                zindex: 2,
+                data: LineOfBestFitForEstimatedMetrics
+            });
+
+        }
 
 
-			overview_string = "";
-			overview_string += "" + metricType + " " + queryType + " usage over " + timeFrame + " months<br>"
-			overview_string += "Days left till Capacity: " + time_left_in_days_till_Cap + "<br>";
-			overview_string += "Days left till Buffered Capacity: " + time_left_in_days_till_BuffedCap + "<br>";
-			overview_string += "Average Daily Growth: " + Delta;
-			$("#countDownTillDoomsDay").html(overview_string);
-		}
+        function fillInInfoPanel(startpoint, capPoint, bufcapPoint, Delta, unit)
+        {
+            $("#countDownTillDoomsDay").html("");
+            starttime = startpoint[0];
 
-		function justAddTitletoDoomsday()
-		{
-			$("#countDownTillDoomsDay").html("");
+            overview_string = "";
+            overview_string += '<div id="infoTitle">' + metricType + " " + queryType + " usage over " + timeFrame + " months</div><br>";
+            overview_string += '<div class="infoText">Average Daily Growth: ' + Delta.toFixed(2) + " " + unit + "</br></br>";
 
-			overview_string = "Looking at " + metricType + " " + queryType + " usage over " + timeFrame + " months<br>"
-			$("#countDownTillDoomsDay").html(overview_string);
+            overview_string += '<div id="infoCol1" class="infoText"> At Current Growth<hr>';
 
-		}
+            //real capacity at current growth
+            if (capPoint)
+            {
+                endtime = capPoint[0];
+                time_left =  (endtime - starttime);
+                time_left_in_days_till_Cap = Math.round(time_left / 1000 / 60 / 60 / 24);
+                overview_string += 'Days left untill capacity: ' + time_left_in_days_till_Cap + "<br>";
+
+            }
+
+            //buffered capacity at current growth
+            if (bufcapPoint && capacityBuffer != 100)
+            {
+                endtime = bufcapPoint[0];
+                time_left =  (endtime - starttime);
+                time_left_in_days_till_BuffedCap = Math.round(time_left / 1000 / 60 / 60 / 24);
+                overview_string += "Days left untill " + capacityBuffer + "% capacity: " + time_left_in_days_till_BuffedCap + "<br>";
+            }
+
+
+
+
+	        overview_string += "</div>";
+            $("#countDownTillDoomsDay").html(overview_string);
+        }
+
+        function justAddTitletoDoomsday(Delta, unit)
+        {
+            $("#countDownTillDoomsDay").html("");
+
+            overview_string = '<div id="infoTitle">' + metricType + " " + queryType + " usage over " + timeFrame + " months</div><br>";
+            overview_string +=  '<div id="infoText">Usage Trending Downwards at ' + Delta.toFixed(2) + " " + unit + "</div>";
+            $("#countDownTillDoomsDay").html(overview_string);
+
+        }
 
 		function figureOutCapacity( targetCapacity, startX, startY, deltaX, deltaY )
 		{
 
-			CapacityLeft = targetCapacity - startX;
-        	timeToGo = CapacityLeft / deltaX;
-        	timeToGoInMS = timeToGo * deltaY;
-        	actualTime = timeToGoInMS + startY;
+            CapacityLeft = targetCapacity - startY;
+            timeToGo = CapacityLeft / deltaY;
+            timeToGoInMS = timeToGo * deltaX;
+            actualTime = timeToGoInMS + startX;
 
-        	return [actualTime, targetCapacity ];
+            return [actualTime, targetCapacity ];
 
 		}
 

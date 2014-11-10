@@ -84,9 +84,9 @@
 				<div id="MetricType">
 					Based on the daily what?:
 					<br/>
-					<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
-					<br/>
 					<input type="radio" id="max" class="element-status-setting" name="metricType" value="max"> Max
+					<br/>
+					<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
 					<br/>
 					<input type="radio" id="min" class="element-status-setting" name="metricType" value="min"> Min
 					<br/>

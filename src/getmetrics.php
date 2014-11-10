@@ -91,28 +91,30 @@ if ($query_type == "Mem")
 	$hostMemResults = $db->execQuery($sql);
 
 	$name = $hostMemResults[0]['NAME'];
+	$memScale = 1e-6;
 
 	foreach ($hostMemResults as $index => $row) {
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
 		$x = $sample_time * 1000;
 
-		$data = array($x, floatval($row['MIN_MEM_USAGE']));
+		$data = array($x, floatval($row['MIN_MEM_USAGE'] * $memScale ));
 		array_push($min_mem_usage_array, $data);
 
-		$data = array($x, floatval($row['MAX_MEM_USAGE']));
+		$data = array($x, floatval($row['MAX_MEM_USAGE'] * $memScale ));
 		array_push($max_mem_usage_array, $data);
 
-		$data = array($x, floatval($row['AVG_MEM_USAGE']));
+		$data = array($x, floatval($row['AVG_MEM_USAGE'] * $memScale ));
 		array_push($avg_mem_usage_array, $data);
 	}
 
-	$capacity = intval($hostMemResults[0]['TOTAL_CAPACITY']);
+	$capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
 
 	if ($metricType == 'min')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Mem Min",
 			'capacity' => $capacity,
+			'unit' => 'GB',
 			'series' => $min_mem_usage_array
 			);
 	}
@@ -122,6 +124,7 @@ if ($query_type == "Mem")
 		$my_series = array(
 			'name' => $name . " - Daily Mem Max",
 			'capacity' => $capacity,
+			'unit' => 'GB',
 			'series' => $max_mem_usage_array
 			);
 	}
@@ -131,6 +134,7 @@ if ($query_type == "Mem")
 		$my_series = array(
 			'name' => $name . " - Daily Mem Avg",
 			'capacity' => $capacity,
+			'unit' => 'GB',
 			'series' => $avg_mem_usage_array
 			);
 	}
@@ -186,28 +190,30 @@ elseif ($query_type == "Cpu")
 	$hostCpuResults = $db->execQuery($sql);
 
 	$name = $hostCpuResults[0]['NAME'];
+	$cpuScale = 1000;
 
 	foreach ($hostCpuResults as $index => $row) {
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
 		$x = $sample_time * 1000;
 
-		$data = array($x, floatval($row['MIN_CPU_USAGE']));
+		$data = array($x, floatval($row['MIN_CPU_USAGE'] / $cpuScale ));
 		array_push($min_cpu_usage_array, $data);
 
-		$data = array($x, floatval($row['MAX_CPU_USAGE']));
+		$data = array($x, floatval($row['MAX_CPU_USAGE'] / $cpuScale ));
 		array_push($max_cpu_usage_array, $data);
 
-		$data = array($x, floatval($row['AVG_CPU_USAGE']));
+		$data = array($x, floatval($row['AVG_CPU_USAGE'] / $cpuScale ));
 		array_push($avg_cpu_usage_array, $data);
 	}
 
-	$capacity = intval($hostCpuResults[0]['TOTAL_CAPACITY']);
+	$capacity = floatval($hostCpuResults[0]['TOTAL_CAPACITY'] / $cpuScale);
 
 	if ($metricType == 'min')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Min",
 			'capacity' => $capacity,
+			'unit' => 'GHz',
 			'series' => $min_cpu_usage_array
 			);
 	}
@@ -217,6 +223,7 @@ elseif ($query_type == "Cpu")
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Max",
 			'capacity' => $capacity,
+			'unit' => 'GHz',
 			'series' => $max_cpu_usage_array
 			);
 	}
@@ -226,6 +233,7 @@ elseif ($query_type == "Cpu")
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Avg",
 			'capacity' => $capacity,
+			'unit' => 'GHz',
 			'series' => $avg_cpu_usage_array
 			);
 	}
@@ -292,28 +300,31 @@ GROUP BY
 	$datastoreResults = $db->execQuery($datastoreSql);
 
 	$name = $datastoreResults[0]['NAME'];
-	$capacity = intval($datastoreResults[0]['TOTAL_CAPACITY']);
+	$datastoreScale = 1;
+
+	$capacity = floatval($datastoreResults[0]['TOTAL_CAPACITY'] * $datastoreScale);
+
 
 	foreach ($datastoreResults as $index => $row) {
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
 		$x = $sample_time * 1000;
 
-		$data = array($x, floatval($row['MIN_USAGE']));
+		$data = array($x, floatval($row['MIN_USAGE'] / $datastoreScale ));
 		array_push($min_datastore_usage_array, $data);
 
-		$data = array($x, floatval($row['MAX_USAGE']));
+		$data = array($x, floatval($row['MAX_USAGE'] / $datastoreScale ));
 		array_push($max_datastore_usage_array, $data);
 
-		$data = array($x, floatval($row['AVG_USAGE']));
+		$data = array($x, floatval($row['AVG_USAGE'] / $datastoreScale ));
 		array_push($avg_datastore_usage_array, $data);
 
-		$data = array($x, floatval($row['MIN_PROV']));
+		$data = array($x, floatval($row['MIN_PROV'] / $datastoreScale ));
 		array_push($min_datastore_prov_array, $data);
 
-		$data = array($x, floatval($row['MAX_PROV']));
+		$data = array($x, floatval($row['MAX_PROV'] / $datastoreScale ));
 		array_push($max_datastore_prov_array, $data);
 
-		$data = array($x, floatval($row['AVG_PROV']));
+		$data = array($x, floatval($row['AVG_PROV'] / $datastoreScale ));
 		array_push($avg_datastore_prov_array, $data);
 	}
 
@@ -323,11 +334,13 @@ GROUP BY
 		$usage_series = array(
 			'name' => $name . " - Daily Actual Min",
 			'capacity' => $capacity,
+			'unit' => 'GBs',
 			'series' => $min_datastore_usage_array
 			);
 		$prov_series = array(
 			'name' => $name . " - Daily Provisioned Min",
 			'capacity' => $capacity,
+			'unit' => 'GBs',
 			'series' => $min_datastore_prov_array
 			);
 	}
@@ -337,11 +350,13 @@ GROUP BY
 		$usage_series = array(
 			'name' => $name . " - Daily Actual Max",
 			'capacity' => $capacity,
+			'unit' => 'GBs',
 			'series' => $max_datastore_usage_array
 			);
 		$prov_series = array(
 			'name' => $name . " - Daily Provisioned Max",
 			'capacity' => $capacity,
+			'unit' => 'GBs',
 			'series' => $max_datastore_prov_array
 			);
 	}
@@ -351,11 +366,13 @@ GROUP BY
 		$usage_series = array(
 			'name' => $name . " - Daily Actual Avg",
 			'capacity' => $capacity,
+			'unit' => 'GBs',
 			'series' => $avg_datastore_usage_array
 			);
 		$prov_series = array(
 			'name' => $name . " - Daily Provisioned Avg",
 			'capacity' => $capacity,
+			'unit' => 'GBs',
 			'series' => $avg_datastore_prov_array
 			);
 	}
