@@ -15,7 +15,7 @@ $(function() {
 
 	$("#widgetSettings").hide();
 
-	$('.query-type-setting').change(settingChanged);
+	$('.query-type-setting').change(queryTypeChanged);
 	$('.element-status-setting').change(settingChanged);
 	$('.time-frame-selector').change(settingChanged);
 	$('#widgetOptions input[name=dailyVal]:radio').change(settingChanged);
@@ -41,15 +41,6 @@ $(function() {
 		return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 	};
 
-	monitorCount = function(count) {
-		if (count == 0) {
-			return "No monitors";
-		} else if (count == 1) {
-			return "1 monitor";
-		}
-		return count + " monitors";
-	};
-
 	function resizeGadget(dimensions) {
 		myChartDimensions = toMyChartDimensions(dimensions);
 		if (myChart) {
@@ -71,6 +62,18 @@ $(function() {
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
 		console.log(uptimeCapacitySettings);
+	}
+
+	function queryTypeChanged() {
+		queryType_val = $('#QueryTypeSelector').find(":selected").val();
+		if (queryType_val == 'Mem' || queryType_val == 'Cpu')
+		{
+			populateIdSelector('getVMobjects');
+		}
+		else if (queryType_val == 'Datastore')
+		{
+			populateIdSelector('getVMdatastores');
+		}
 	}
 
 	function displayStatusBar(error, msg) {
@@ -95,7 +98,7 @@ $(function() {
 
 		$("#widgetSettings").slideDown();
 		$("body").height($(window).height());
-		populateIdSelector();
+		queryTypeChanged();
 	}
 
 	function disableSettings() {
@@ -112,10 +115,10 @@ $(function() {
 		return naturalSort(arg1.name, arg2.name);
 	}
 
-	function populateIdSelector() {
+	function populateIdSelector(dropdown_querytype) {
 		disableSettings();
 		dropdownselector = '#elementId';
-		url = getDropDownsPath + "?uptime_offset=14400&query_type=getVMobjects";
+		url = getDropDownsPath + "?uptime_offset=14400&query_type=" + dropdown_querytype;
 		$(dropdownselector).empty().append($("<option />").val(-1).text("Loading..."));
 
 		$.getJSON(url, function(data) {
@@ -137,7 +140,7 @@ $(function() {
 			}
 		}).fail(function(jqXHR, textStatus, errorThrown) {
 			console.log("Error with: " + url) ;
-			displayStatusBar(error, "Error Loading the List of Elements from up.time Controller");
+			displayStatusBar(errorThrown, "Error Loading the List of Elements from up.time Controller");
 		});
 
 

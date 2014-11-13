@@ -87,7 +87,7 @@ elseif ($query_type == "getVMobjects")
     $getVMobjectsSql = 'select vmware_object_id, display_name
 
      from vmware_object
-     where mor_type in ("ClusterComputeResource","HostSystem","Datastore" )  ';
+     where mor_type in ("ClusterComputeResource","HostSystem")  ';
 
     $results = $db->execQuery($getVMobjectsSql);
     foreach ($results as $row)
@@ -102,6 +102,32 @@ elseif ($query_type == "getVMobjects")
 
 
 	ksort($json);
+    echo json_encode($json);
+}
+
+elseif ($query_type == "getVMdatastores")
+{
+    $db = new uptimeDB;
+    $db->connectDB();
+
+    $getVMobjectsSql = 'select vmware_object_id, display_name
+
+     from vmware_object
+     where mor_type in ("Datastore" )  ';
+
+    $results = $db->execQuery($getVMobjectsSql);
+    foreach ($results as $row)
+    {
+        $id = $row['VMWARE_OBJECT_ID'];
+        $name = $row['DISPLAY_NAME'];
+        if (!preg_match("/deleted/", $name))
+        {
+            $json[$name] = $id;
+        }
+    }
+
+
+    ksort($json);
     echo json_encode($json);
 }
 
