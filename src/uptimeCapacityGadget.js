@@ -13,7 +13,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		var dimensions = new UPTIME.pub.gadgets.Dimensions(100, 100);
 		var chartDivId = null;
 		var elementId = null;
-		var metricType = null;
+		var dailyVal = null;
 		var queryType = null;
 		var timeFrame = null;
 		var chartTimer = null;
@@ -31,7 +31,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 		if (typeof options == "object") {
 			dimensions = options.dimensions;
 			chartDivId = options.chartDivId;
-			metricType = options.metricType;
+			dailyVal = options.dailyVal;
 			queryType = options.queryType;
 			elementId = options.elementId;
 			timeFrame = options.timeFrame;
@@ -65,7 +65,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 			var firstPoint = null;
 			var lastPoint = null;
-			var my_url = getMetricsPath + '&query_type=' + queryType + '&metricType='  + metricType + "&element=" + elementId + "&time_frame=" + timeFrame;
+			var my_url = getMetricsPath + '&query_type=' + queryType + '&dailyVal='  + dailyVal + "&element=" + elementId + "&time_frame=" + timeFrame;
 		    $.ajax({
 		        'async': true,
 		        'global': false,
@@ -235,7 +235,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             starttime = startpoint[0];
 
             overview_string = "";
-            overview_string += '<div id="infoTitle">' + metricType + " " + queryType + " usage over " + timeFrame + " months</div><br>";
+            overview_string += '<div id="infoTitle">' + dailyVal + " " + queryType + " usage over " + timeFrame + " months</div><br>";
             overview_string += '<div class="infoText">Average Daily Growth: ' + Delta.toFixed(2) + " " + unit + "</br></br>";
 
             overview_string += '<div id="infoCol1" class="infoText"> At Current Growth<hr>';
@@ -270,7 +270,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         {
             $("#countDownTillDoomsDay").html("");
 
-            overview_string = '<div id="infoTitle">' + metricType + " " + queryType + " usage over " + timeFrame + " months</div><br>";
+            overview_string = '<div id="infoTitle">' + dailyVal + " " + queryType + " usage over " + timeFrame + " months</div><br>";
             overview_string +=  '<div id="infoText">Usage Trending Downwards at ' + Delta.toFixed(2) + " " + unit + "</div>";
             $("#countDownTillDoomsDay").html(overview_string);
 

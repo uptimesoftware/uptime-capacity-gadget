@@ -32,8 +32,8 @@ else
 {
 	$time_frame = 3;
 }
-if (isset($_GET['metricType'])){
-	$metricType = $_GET['metricType'];
+if (isset($_GET['dailyVal'])){
+	$dailyVal = $_GET['dailyVal'];
 }
 if (isset($_GET['element'])){
 	$vmware_object_id = $_GET['element'];
@@ -109,7 +109,7 @@ if ($query_type == "Mem")
 
 	$capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
 
-	if ($metricType == 'min')
+	if ($dailyVal == 'min')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Mem Min",
@@ -119,7 +119,7 @@ if ($query_type == "Mem")
 			);
 	}
 
-	if ($metricType == 'max')
+	if ($dailyVal == 'max')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Mem Max",
@@ -129,7 +129,7 @@ if ($query_type == "Mem")
 			);
 	}
 
-	if ($metricType == 'avg')
+	if ($dailyVal == 'avg')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Mem Avg",
@@ -208,7 +208,7 @@ elseif ($query_type == "Cpu")
 
 	$capacity = floatval($hostCpuResults[0]['TOTAL_CAPACITY'] / $cpuScale);
 
-	if ($metricType == 'min')
+	if ($dailyVal == 'min')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Min",
@@ -218,7 +218,7 @@ elseif ($query_type == "Cpu")
 			);
 	}
 
-	if ($metricType == 'max')
+	if ($dailyVal == 'max')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Max",
@@ -228,7 +228,7 @@ elseif ($query_type == "Cpu")
 			);
 	}
 
-	if ($metricType == 'avg')
+	if ($dailyVal == 'avg')
 	{
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Avg",
@@ -329,7 +329,7 @@ GROUP BY
 	}
 
 
-	if ($metricType == 'min')
+	if ($dailyVal == 'min')
 	{
 		$usage_series = array(
 			'name' => $name . " - Daily Actual Min",
@@ -345,7 +345,7 @@ GROUP BY
 			);
 	}
 
-	if ($metricType == 'max')
+	if ($dailyVal == 'max')
 	{
 		$usage_series = array(
 			'name' => $name . " - Daily Actual Max",
@@ -361,7 +361,7 @@ GROUP BY
 			);
 	}
 
-	if ($metricType == 'avg')
+	if ($dailyVal == 'avg')
 	{
 		$usage_series = array(
 			'name' => $name . " - Daily Actual Avg",

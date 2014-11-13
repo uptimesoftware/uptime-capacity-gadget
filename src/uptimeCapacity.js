@@ -18,7 +18,7 @@ $(function() {
 	$('.query-type-setting').change(settingChanged);
 	$('.element-status-setting').change(settingChanged);
 	$('.time-frame-selector').change(settingChanged);
-	$('#widgetOptions input[name=metricType]:radio').change(settingChanged);
+	$('#widgetOptions input[name=dailyVal]:radio').change(settingChanged);
 	$('#capacitySlider').change(changeCapacityBuffer);
 
 
@@ -63,13 +63,14 @@ $(function() {
 	}
 
 	function settingChanged() {
-		uptimeCapacitySettings.metricType = $("#widgetOptions input[name=metricType]:radio:checked").val();
+		uptimeCapacitySettings.dailyVal = $("#dailyVal input[name=dailyVal]:radio:checked").val();
 		uptimeCapacitySettings.elementId = $('#elementId').find(":selected").val();
 		uptimeCapacitySettings.timeFrame = $('#MonthSelector').find(":selected").val();
 		uptimeCapacitySettings.queryType = $('#QueryTypeSelector').find(":selected").val();
 		uptimeCapacitySettings.capacityBuffer = $("#capacitySlider").val();
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
+		console.log(uptimeCapacitySettings);
 	}
 
 	function displayStatusBar(error, msg) {
@@ -91,9 +92,6 @@ $(function() {
 		if (myChart) {
 			myChart.stopTimer();
 		}
-
-		$("#widgetOptions input[name=chartType]").filter('[value=' + uptimeCapacitySettings.chartTypeId + ']').prop('checked',
-				true);
 
 		$("#widgetSettings").slideDown();
 		$("body").height($(window).height());
@@ -153,7 +151,7 @@ $(function() {
 			$("#MonthSelector").val(settings.timeFrame);
 			$("#capacitySlider").val(settings.capacityBuffer);
 			$("#CurCapacityBuffer").html(settings.capacityBuffer + "%");
-			$("#" + settings.metricType).prop("checked", true);
+			$("#" + settings.dailyVal).prop("checked", true);
 			$.extend(uptimeCapacitySettings, settings);
 			displayChart();
 		} else if (uptimeGadget.isOwner()) {
@@ -202,7 +200,7 @@ $(function() {
 			getMetricsPath : getMetricsPath + "?uptime_offset=" + uptimeOffset,
 			dimensions : myChartDimensions,
 			chartDivId : "widgetChart",
-			metricType : uptimeCapacitySettings.metricType,
+			dailyVal : uptimeCapacitySettings.dailyVal,
 			queryType : uptimeCapacitySettings.queryType,
 			elementId : uptimeCapacitySettings.elementId,
 			timeFrame : uptimeCapacitySettings.timeFrame,
