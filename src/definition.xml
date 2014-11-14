@@ -51,9 +51,11 @@
 				<div id="availableQueries">
 					Query Type:
 					<select id="QueryTypeSelector" class="query-type-setting">
-						<option value="Mem">Memory</option>
-						<option value="Cpu">Cpu</option>
-						<option value="Datastore">Datastore</option>
+						<option value="vmware-Mem">VM Memory</option>
+						<option value="vmware-Cpu">VM Cpu</option>
+						<option value="osperf-Mem">OS Memory</option>
+						<option value="osperf-Cpu">OS Cpu</option>
+						<option value="vmware-Datastore">Datastore</option>
 					</select>
 				</div>
 				<div id="availableElements">

@@ -66,9 +66,13 @@ $(function() {
 
 	function queryTypeChanged() {
 		queryType_val = $('#QueryTypeSelector').find(":selected").val();
-		if (queryType_val == 'Mem' || queryType_val == 'Cpu')
+		if (queryType_val == 'vmware-Mem' || queryType_val == 'vmware-Cpu')
 		{
 			populateIdSelector('getVMobjects');
+		}
+		else if ( queryType_val == 'osperf-Mem' || queryType_val == 'osperf-Cpu')
+		{
+			populateIdSelector('getAgentSystems');
 		}
 		else if (queryType_val == 'Datastore')
 		{

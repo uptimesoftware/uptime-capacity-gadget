@@ -56,7 +56,7 @@ else
 }
 
 
-if ($query_type == "Mem")
+if ($query_type == "vmware-Mem")
 {
 
 	$min_mem_usage_array = array();
@@ -153,7 +153,7 @@ if ($query_type == "Mem")
 		echo "No Data";
 	}
 }
-elseif ($query_type == "Cpu")
+elseif ($query_type == "vmware-Cpu")
 {
 
 	$min_cpu_usage_array = array();

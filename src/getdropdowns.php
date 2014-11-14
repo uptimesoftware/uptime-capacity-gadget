@@ -105,6 +105,37 @@ elseif ($query_type == "getVMobjects")
     echo json_encode($json);
 }
 
+elseif ($query_type == "getAgentSystems")
+{
+
+    // Create API object
+    $uptime_api = new uptimeApi($uptime_api_username, $uptime_api_password, $uptime_api_hostname, $uptime_api_port, $uptime_api_version, $uptime_api_ssl);
+    $elements = $uptime_api->getElements("type=Server&isMonitored=1");
+    foreach ($elements as $d) {
+        if (!preg_match("/Vcenter/", $d['typeSubtype'] ))
+        {
+            $has_ppg = False;
+            foreach($d['monitors'] as $monitor)
+            {
+                if($monitor['name'] == "Platform Performance Gatherer")
+                {
+                    $has_ppg = True;
+                    break;
+                }
+            }
+            if ($has_ppg)
+            {
+                $k = $d['name'];
+                $v = $d['id'];
+                $json[$k] = $v;
+            }
+        }
+    }
+    //sort alphabeticaly on name instead of their order on ID
+    ksort($json);  
+    echo json_encode($json);
+}
+
 elseif ($query_type == "getVMdatastores")
 {
     $db = new uptimeDB;
