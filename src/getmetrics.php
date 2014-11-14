@@ -256,6 +256,221 @@ elseif ($query_type == "vmware-Cpu")
 
 
 }
+
+elseif ( $query_type == "osperf-Mem")
+{
+
+	$min_mem_usage_array = array();
+	$max_mem_usage_array = array();
+	$avg_mem_usage_array = array();
+
+
+	$sql = "SELECT 
+	e.entity_id, 
+	e.name,
+	date(s.sample_time) as SAMPLE_TIME,
+	min(a.free_mem) as MIN_MEM_USAGE,
+	max(a.free_mem) as MAX_MEM_USAGE,
+	avg(a.free_mem) as AVG_MEM_USAGE,
+	min(c.memsize) as TOTAL_CAPACITY,
+	max(c.memsize),
+	avg(c.memsize),
+	day(s.sample_time), 
+	month(s.sample_time), 
+	year(s.sample_time) 
+FROM 
+	performance_aggregate a, performance_sample s, entity e, entity_configuration c
+WHERE 
+	s.id = a.sample_id AND 
+	s.uptimehost_id = e.entity_id AND
+	e.entity_id = c.entity_id AND
+	s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
+	e.entity_type_id = 1 AND
+	e.entity_id = $vmware_object_id
+GROUP BY 
+	e.entity_id,
+	year(s.sample_time),
+	month(s.sample_time), 
+	day(s.sample_time)
+
+";
+
+	$hostMemResults = $db->execQuery($sql);
+
+	$name = $hostMemResults[0]['NAME'];
+	$memScale = 1e-6;
+
+	foreach ($hostMemResults as $index => $row) {
+		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
+		$x = $sample_time * 1000;
+
+		$data = array($x, floatval($row['MIN_MEM_USAGE'] * $memScale ));
+		array_push($min_mem_usage_array, $data);
+
+		$data = array($x, floatval($row['MAX_MEM_USAGE'] * $memScale ));
+		array_push($max_mem_usage_array, $data);
+
+		$data = array($x, floatval($row['AVG_MEM_USAGE'] * $memScale ));
+		array_push($avg_mem_usage_array, $data);
+	}
+
+	$capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
+
+	if ($dailyVal == 'min')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Mem Min",
+			'capacity' => $capacity,
+			'unit' => 'GB',
+			'series' => $min_mem_usage_array
+			);
+	}
+
+	if ($dailyVal == 'max')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Mem Max",
+			'capacity' => $capacity,
+			'unit' => 'GB',
+			'series' => $max_mem_usage_array
+			);
+	}
+
+	if ($dailyVal == 'avg')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Mem Avg",
+			'capacity' => $capacity,
+			'unit' => 'GB',
+			'series' => $avg_mem_usage_array
+			);
+	}
+
+
+	if (count($my_series['series']) > 0)
+	{
+		array_push($json, $my_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
+}
+
+elseif ( $query_type == "osperf-Cpu")
+{
+
+	$min_cpu_usage_array = array();
+	$max_cpu_usage_array = array();
+	$avg_cpu_usage_array = array();
+
+
+
+	$sql = "SELECT 
+	e.entity_id, 
+	e.name,
+	date(s.sample_time) as SAMPLE_TIME,
+	min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
+	max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
+	avg(a.cpu_usr + a.cpu_sys + a.cpu_wio) as AVG_CPU_USAGE,
+	c.numcpus as NUM_CPU,
+	u.mhz as TOTAL_MHZ,
+	day(s.sample_time), 
+	month(s.sample_time), 
+	year(s.sample_time) 
+FROM 
+	performance_aggregate a, performance_sample s, entity e, entity_configuration c, entity_configuration_cpu u
+WHERE 
+	s.id = a.sample_id AND 
+	s.uptimehost_id = e.entity_id AND
+	e.entity_id = c.entity_id AND
+	c.entity_configuration_id = u.entity_configuration_id AND
+	s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
+	e.entity_type_id = 1 AND
+	e.entity_id = $vmware_object_id
+
+GROUP BY 
+	e.entity_id,
+	year(s.sample_time),
+	month(s.sample_time), 
+	day(s.sample_time)
+
+";
+
+	$hostCpuResults = $db->execQuery($sql);
+
+	$name = $hostCpuResults[0]['NAME'];
+	$cpuScale = 1;
+
+	foreach ($hostCpuResults as $index => $row) {
+		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
+		$x = $sample_time * 1000;
+
+		$data = array($x, floatval($row['MIN_CPU_USAGE'] / $cpuScale ));
+		array_push($min_cpu_usage_array, $data);
+
+		$data = array($x, floatval($row['MAX_CPU_USAGE'] / $cpuScale ));
+		array_push($max_cpu_usage_array, $data);
+
+		$data = array($x, floatval($row['AVG_CPU_USAGE'] / $cpuScale ));
+		array_push($avg_cpu_usage_array, $data);
+	}
+
+	$capacity = floatval((100 * $hostCpuResults[0]['NUM_CPU'] ) / $cpuScale);
+
+	if ($dailyVal == 'min')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Cpu Min",
+			'capacity' => $capacity,
+			'unit' => '%',
+			'series' => $min_cpu_usage_array
+			);
+	}
+
+	if ($dailyVal == 'max')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Cpu Max",
+			'capacity' => $capacity,
+			'unit' => '%',
+			'series' => $max_cpu_usage_array
+			);
+	}
+
+	if ($dailyVal == 'avg')
+	{
+		$my_series = array(
+			'name' => $name . " - Daily Cpu Avg",
+			'capacity' => $capacity,
+			'unit' => '%',
+			'series' => $avg_cpu_usage_array
+			);
+	}
+
+	if (count($my_series['series']) > 0)
+	{
+		array_push($json, $my_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
+
+
+
+
+
+}
+
 elseif ( $query_type == "Datastore")
 {
 
