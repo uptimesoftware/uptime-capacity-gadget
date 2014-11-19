@@ -56,6 +56,8 @@
 						<option value="osperf-Mem">OS Memory</option>
 						<option value="osperf-Cpu">OS Cpu</option>
 						<option value="vmware-Datastore">Datastore</option>
+						<option value="xenserver-Mem">Xenserver Memory</option>
+						<option value="xenserver-Cpu">Xenserver CPU</option>
 					</select>
 				</div>
 				<div id="availableElements">

@@ -3,6 +3,7 @@ $(function() {
 	var currentURL = $("script#ownScript").attr("src");
     var getMetricsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getmetrics.php';
     var getDropDownsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getdropdowns.php';
+    var baseGadgetPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1);
 
     var date = new Date();
     var uptimeOffset = date.getTimezoneOffset()*60;
@@ -65,18 +66,25 @@ $(function() {
 	}
 
 	function queryTypeChanged() {
-		queryType_val = $('#QueryTypeSelector').find(":selected").val();
-		if (queryType_val == 'vmware-Mem' || queryType_val == 'vmware-Cpu')
+		
+		queryType_val = $('#QueryTypeSelector').find(":selected").val().split("-")[0];
+
+
+		if (queryType_val == 'vmware')
 		{
 			populateIdSelector('getVMobjects');
 		}
-		else if ( queryType_val == 'osperf-Mem' || queryType_val == 'osperf-Cpu')
+		else if ( queryType_val == 'osperf')
 		{
 			populateIdSelector('getAgentSystems');
 		}
 		else if (queryType_val == 'Datastore')
 		{
 			populateIdSelector('getVMdatastores');
+		}
+		else if (queryType_val == 'xenserver')
+		{
+			populateIdSelector('getXenServers');
 		}
 	}
 
@@ -204,7 +212,7 @@ $(function() {
 
 
 		myChart = new UPTIME.UptimeCapacityGadget({
-			getMetricsPath : getMetricsPath + "?uptime_offset=" + uptimeOffset,
+			baseGadgetPath : baseGadgetPath,
 			dimensions : myChartDimensions,
 			chartDivId : "widgetChart",
 			dailyVal : uptimeCapacitySettings.dailyVal,

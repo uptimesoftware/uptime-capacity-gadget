@@ -162,6 +162,32 @@ elseif ($query_type == "getVMdatastores")
     echo json_encode($json);
 }
 
+elseif ($query_type == "getXenServers") {
+    $db = new uptimeDB;
+    $db->connectDB();
+
+    $get_xenserver_sql = "SELECT
+                                e.name, e.entity_id
+                            FROM
+                                erdc_base b, erdc_configuration c, erdc_instance i, entity e
+                            WHERE
+                                b.name = 'XenServer' AND
+                                b.erdc_base_id = c.erdc_base_id AND
+                                c.id = i.configuration_id AND
+                                i.entity_id = e.entity_id";
+
+    $xenservers = $db->execQuery($get_xenserver_sql);
+    foreach ($xenservers as $row) {
+       $id = $row['ENTITY_ID'];
+       $name = $row['NAME'];
+       $json[$name] = $id;
+
+    }
+
+    ksort($json);
+    echo json_encode($json);
+}
+
 
     
 // Unsupported request
