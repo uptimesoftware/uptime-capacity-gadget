@@ -58,6 +58,7 @@
 						<option value="vmware-Datastore">Datastore</option>
 						<option value="xenserver-Mem">Xenserver Memory</option>
 						<option value="xenserver-Cpu">Xenserver CPU</option>
+						<option value="xenserver-DiskUsed">Xenserver Disk Used</option>
 					</select>
 				</div>
 				<div id="availableElements">
