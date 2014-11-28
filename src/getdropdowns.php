@@ -167,7 +167,7 @@ elseif ($query_type == "getXenServers") {
     $db->connectDB();
 
     $get_xenserver_sql = "SELECT
-                                e.name, e.entity_id
+                                e.display_name, e.entity_id
                             FROM
                                 erdc_base b, erdc_configuration c, erdc_instance i, entity e
                             WHERE
@@ -179,7 +179,7 @@ elseif ($query_type == "getXenServers") {
     $xenservers = $db->execQuery($get_xenserver_sql);
     foreach ($xenservers as $row) {
        $id = $row['ENTITY_ID'];
-       $name = $row['NAME'];
+       $name = $row['DISPLAY_NAME'];
        $json[$name] = $id;
 
     }
