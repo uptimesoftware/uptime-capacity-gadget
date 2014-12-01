@@ -51,11 +51,12 @@
 				<div id="availableQueries">
 					Query Type:
 					<select id="QueryTypeSelector" class="query-type-setting">
+
+						<option value="osperf-Mem">OS Memory</option>
+						<option value="osperf-Cpu">OS Cpu</option>
 						<option value="vmware-Mem">VMware Memory</option>
 						<option value="vmware-Cpu">VMware Cpu</option>
 						<option value="vmware-Datastore">VMware Datastore</option>
-						<option value="osperf-Mem">OS Memory</option>
-						<option value="osperf-Cpu">OS Cpu</option>
 						<option value="xenserver-Mem">Xenserver Memory</option>
 						<option value="xenserver-DiskUsed">Xenserver Disk Used</option>
 					</select>

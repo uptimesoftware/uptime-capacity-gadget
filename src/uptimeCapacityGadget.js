@@ -70,10 +70,14 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             queryType_split = queryType.split("-");
 
             var my_url = baseGadgetPath;
-            if ( queryType_split[0] == 'osperf' || queryType_split[0] == 'vmware')
+            if ( queryType_split[0] == 'osperf')
             {
-			     my_url = my_url + 'getmetrics.php' + '?uptime_offset=' + 14400 + '&query_type=' + queryType + '&dailyVal='  + dailyVal + "&element=" + elementId + "&time_frame=" + timeFrame;
+			    my_url = my_url + 'getmetrics.php' + '?uptime_offset=' + 14400 + '&query_type=' + queryType + '&dailyVal='  + dailyVal + "&element=" + elementId + "&time_frame=" + timeFrame;
 		    }
+            else if ( queryType_split[0] == 'vmware')
+            {
+                my_url = my_url + 'getvmwaremetrics.php' + '?uptime_offset=' + 14400 + '&query_type=' + queryType + '&dailyVal='  + dailyVal + "&element=" + elementId + "&time_frame=" + timeFrame;
+            }
             else if ( queryType_split[0] == 'xenserver')
             {
                 my_url = my_url + 'getxenmetrics.php' + '?uptime_offset=' + 14400 + '&query_type=' + queryType + '&dailyVal='  + dailyVal + "&element=" + elementId + "&time_frame=" + timeFrame;
