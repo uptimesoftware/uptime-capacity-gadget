@@ -66,7 +66,7 @@ if ($query_type == "xenserver-Mem")
 
 	$sql = "SELECT
 			e.entity_id,
-			e.name,
+			e.display_name as NAME,
 			date(dd.sampletime) as SAMPLE_TIME,
 			min(dd.value) as MIN_MEM_USAGE,
 			max(dd.value) as MAX_MEM_USAGE,

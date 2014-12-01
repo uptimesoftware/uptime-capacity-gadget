@@ -267,7 +267,7 @@ elseif ( $query_type == "osperf-Mem")
 
 	$sql = "SELECT 
 	e.entity_id, 
-	e.name,
+	e.display_name as NAME,
 	date(s.sample_time) as SAMPLE_TIME,
 	min(a.free_mem) as MIN_MEM_USAGE,
 	max(a.free_mem) as MAX_MEM_USAGE,
@@ -372,7 +372,7 @@ elseif ( $query_type == "osperf-Cpu")
 
 	$sql = "SELECT 
 	e.entity_id, 
-	e.name,
+	e.display_name as NAME,
 	date(s.sample_time) as SAMPLE_TIME,
 	min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
 	max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
