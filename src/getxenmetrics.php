@@ -64,7 +64,7 @@ if ($query_type == "xenserver-Mem")
 	$avg_mem_usage_array = array();
 
 
-	$sql = "SELECT
+	$getXenServerMemUsedsql = "SELECT
 			e.entity_id,
 			e.display_name as NAME,
 			date(dd.sampletime) as SAMPLE_TIME,
@@ -93,7 +93,53 @@ if ($query_type == "xenserver-Mem")
 			month(dd.sampletime), 
 			day(dd.sampletime)";
 
-	$hostMemResults = $db->execQuery($sql);
+
+	$getXenserverMemCapcitySql = "SELECT
+	e.entity_id,
+	e.name,
+	p.name as NAME,
+	avg(dd.value) as VAL
+FROM
+	erdc_base b, erdc_configuration c, erdc_parameter p, erdc_decimal_data dd, erdc_instance i, entity e
+WHERE
+    b.name = 'XenServer' AND
+	b.erdc_base_id = c.erdc_base_id AND
+	b.erdc_base_id = p.erdc_base_id AND
+	(p.name = 'hostMemFree' or p.name = 'HostMemUsed') AND
+	p.erdc_parameter_id = dd.erdc_parameter_id AND
+	dd.erdc_instance_id = i.erdc_instance_id AND
+	dd.sampletime >= CURDATE() AND
+	i.entity_id = e.entity_id AND
+	e.entity_id = $element_id 
+GROUP BY 
+	e.entity_id,
+	year(dd.sampletime),
+	month(dd.sampletime), 
+	day(dd.sampletime),
+	p.name";
+
+	$capacitySQLResults = $db->execQuery($getXenserverMemCapcitySql);
+
+	$myhostMemUsed = 0;
+	$myhostMemFree = 0;
+	foreach ($capacitySQLResults as $index => $row) 
+	{
+		if ($row['NAME'] == 'hostMemFree')
+		{
+			$myhostMemFree = $row['VAL'];
+		}
+		elseif ( $row['NAME'] == 'hostMemUsed')
+		{
+			$myhostMemUsed = $row['VAL'];
+		}
+	}
+
+	$capacity = $myhostMemUsed + $myhostMemFree;
+
+
+
+
+	$hostMemResults = $db->execQuery($getXenServerMemUsedsql);
 
 	$name = $hostMemResults[0]['NAME'];
 	$memScale = 1;
@@ -112,7 +158,6 @@ if ($query_type == "xenserver-Mem")
 		array_push($avg_mem_usage_array, $data);
 	}
 
-	$capacity = floatval(500.00);
 
 	if ($dailyVal == 'min')
 	{
