@@ -250,7 +250,6 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             overview_string += '<div id="infoTitle">' + dailyVal + " " + queryType + " usage over " + timeFrame + " months</div><br>";
             overview_string += '<div class="infoText">Average Daily Growth: ' + Delta.toFixed(2) + " " + unit + "</br></br>";
 
-            overview_string += '<div id="infoCol1" class="infoText"> At Current Growth<hr>';
 
             //real capacity at current growth
             if (capPoint)
@@ -272,9 +271,6 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             }
 
 
-
-
-	        overview_string += "</div>";
             $("#countDownTillDoomsDay").html(overview_string);
         }
 
