@@ -319,9 +319,9 @@ elseif ( $query_type == "xenserver-DiskUsed")
 
 	$diskUsedSql = "SELECT
 		e.entity_id,
-		e.name,
+		e.display_name as ENTITY_NAME,
 		ro.id,
-		ro.object_name as NAME,
+		ro.object_name as OBJ_NAME,
 		min(rov.value) as MIN_USAGE,
 		max(rov.value) as MAX_USAGE,
 		avg(rov.value) as AVG_USAGE,
@@ -402,7 +402,7 @@ GROUP BY
 
 	$diskUsedResults = $db->execQuery($diskUsedSql);
 
-	$name = $diskUsedResults[0]['NAME'];
+	$name = $diskUsedResults[0]['ENTITY_NAME'] . " - " . $diskUsedResults[0]['OBJ_NAME'];
 	$datastoreScale = 1;
 
 	foreach ($diskUsedResults as $index => $row) {
