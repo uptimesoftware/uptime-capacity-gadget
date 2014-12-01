@@ -188,6 +188,40 @@ elseif ($query_type == "getXenServers") {
     echo json_encode($json);
 }
 
+elseif ( $query_type == 'getXenServerDatastores')
+{
+    $db = new uptimeDB;
+    $db->connectDB();
+
+    $get_xenserver_datastores_sql = "SELECT
+                e.display_name as NAME,
+                e.entity_id as ID,
+                ro.object_name as OBJ_NAME
+        FROM 
+                erdc_base b, erdc_configuration c, erdc_instance i, entity e, ranged_object ro
+        WHERE
+                b.name = 'XenServer' AND
+                b.erdc_base_id = c.erdc_base_id AND
+                c.id = i.configuration_id AND
+                i.erdc_instance_id = ro.instance_id AND
+                i.entity_id = e.entity_id
+        GROUP BY
+                e.entity_id,
+                ro.object_name";
+
+
+    $datastore_results = $db->execQuery($get_xenserver_datastores_sql);
+
+    foreach ($datastore_results as $row) {
+        $id = $row['ID'] . "-" . $row['OBJ_NAME'];
+        $name = $row['NAME'] . " - " . $row['OBJ_NAME'];
+        $json[$name] = $id;
+    }
+
+    ksort($json);
+    echo json_encode($json);
+}
+
 
     
 // Unsupported request

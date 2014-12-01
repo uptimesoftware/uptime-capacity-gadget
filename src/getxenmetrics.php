@@ -207,6 +207,14 @@ GROUP BY
 elseif ( $query_type == "xenserver-DiskUsed")
 {
 
+	//we'll need to split the $element_id into the real entity_id and the datastore name
+	$element_id_split = explode("-", $element_id);
+	$element_id = $element_id_split[0];
+	$datastore_name = $element_id_split[1];
+
+
+
+
 	$min_disk_usage_array = array();
 	$max_disk_usage_array = array();
 	$avg_disk_usage_array = array();
@@ -238,7 +246,7 @@ elseif ( $query_type == "xenserver-DiskUsed")
 		rov.name = 'diskUsed' AND
 		rov.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
 		e.entity_id = $element_id AND
-		ro.object_name = 'NFS_ISO_library'
+		ro.object_name = '$datastore_name'
 	GROUP BY
 		ro.id,
 		e.entity_id,
@@ -266,7 +274,7 @@ WHERE
 	i.erdc_instance_id = ro.instance_id AND
 	ro.id = rov.ranged_object_id AND
 	(rov.name = 'diskFree' or rov.name = 'diskUsed' ) AND
-	ro.object_name = 'NFS_ISO_library' AND
+	ro.object_name = '$datastore_name' AND
 	rov.sample_time >= CURDATE()
 GROUP BY
 	ro.id,

@@ -67,24 +67,35 @@ $(function() {
 
 	function queryTypeChanged() {
 		
-		queryType_val = $('#QueryTypeSelector').find(":selected").val().split("-")[0];
+		queryType_val = $('#QueryTypeSelector').find(":selected").val();
+		queryType_split = queryType_val.split("-");
 
 
-		if (queryType_val == 'vmware')
+		if (queryType_split[0] == 'vmware')
 		{
-			populateIdSelector('getVMobjects');
+			if (queryType_split[1] == 'Datastore')
+			{
+				populateIdSelector('getVMdatastores');
+			}
+			else
+			{
+				populateIdSelector('getVMobjects');
+			}
 		}
-		else if ( queryType_val == 'osperf')
+		else if (queryType_split[0] == 'xenserver')
+		{
+			if (queryType_split[1] == 'DiskUsed')
+			{
+				populateIdSelector('getXenServerDatastores');
+			}
+			else {
+				populateIdSelector('getXenServers');	
+			}
+			
+		}
+		else if ( queryType_split[0] == 'osperf')
 		{
 			populateIdSelector('getAgentSystems');
-		}
-		else if (queryType_val == 'Datastore')
-		{
-			populateIdSelector('getVMdatastores');
-		}
-		else if (queryType_val == 'xenserver')
-		{
-			populateIdSelector('getXenServers');
 		}
 	}
 
