@@ -351,48 +351,59 @@ elseif ( $query_type == "xenserver-DiskUsed")
 
 
 
-	$diskFreeSql = "SELECT
-		e.entity_id,
-		e.name,
-		ro.id,
-		ro.object_name as NAME,
-		min(rov.value) as MIN_USAGE,
-		max(rov.value) as MAX_USAGE,
-		avg(rov.value) as AVG_USAGE,
-		date(rov.sample_time) as SAMPLE_TIME,
-		day(rov.sample_time), 
-		month(rov.sample_time), 
-		year(rov.sample_time) 
-	FROM
-		erdc_base b, erdc_configuration c, erdc_instance i, entity e, ranged_object ro, ranged_object_value rov
-	WHERE
-		b.name = 'XenServer' AND
-		b.erdc_base_id = c.erdc_base_id AND
-		c.id = i.configuration_id AND
-		i.entity_id = e.entity_id AND
-		i.erdc_instance_id = ro.instance_id AND
-		ro.id = rov.ranged_object_id AND
-		rov.name = 'diskFree' AND
-		rov.sample_time > date_sub(now(),interval 1 day) AND
-		e.entity_id = $element_id AND
-		ro.object_name = 'NFS_ISO_library'
-	GROUP BY
-		ro.id,
-		e.entity_id,
-		year(rov.sample_time),
-		month(rov.sample_time), 
-		day(rov.sample_time)";
+	$diskCapacitySql = "SELECT
+	e.entity_id,
+	e.name,
+	ro.id,
+	ro.object_name,
+	rov.name as NAME,
+	avg(rov.value) as VAL,
+	date(rov.sample_time)
+FROM
+	erdc_base b, erdc_configuration c, erdc_instance i, entity e, ranged_object ro, ranged_object_value rov
+WHERE
+	b.name = 'XenServer' AND
+	b.erdc_base_id = c.erdc_base_id AND
+	c.id = i.configuration_id AND
+	i.entity_id = e.entity_id AND
+	i.erdc_instance_id = ro.instance_id AND
+	ro.id = rov.ranged_object_id AND
+	(rov.name = 'diskFree' or rov.name = 'diskUsed' ) AND
+	ro.object_name = 'NFS_ISO_library' AND
+	rov.sample_time >= CURDATE()
+GROUP BY
+	ro.id,
+	e.entity_id,
+	year(rov.sample_time),
+	month(rov.sample_time), 
+	day(rov.sample_time),
+	rov.name";
+
+
+
+	$diskCapacityResults = $db->execQuery($diskCapacitySql);
+
+	$mydiskUsed = 0;
+	$mydiskFree = 0;
+	foreach ($diskCapacityResults as $index => $row) 
+	{
+		if ($row['NAME'] == 'diskFree')
+		{
+			$mydiskFree = $row['VAL'];
+		}
+		elseif ( $row['NAME'] == 'diskUsed')
+		{
+			$mydiskUsed = $row['VAL'];
+		}
+	}
+
+	$capacity = $mydiskUsed + $mydiskFree;
 
 
 	$diskUsedResults = $db->execQuery($diskUsedSql);
-	$diskFreeResults = $db->execQuery($diskFreeSql);
-
 
 	$name = $diskUsedResults[0]['NAME'];
 	$datastoreScale = 1;
-
-	$capacity = $diskUsedResults[0]['AVG_USAGE'] + $diskFreeResults[0]['AVG_USAGE'];
-
 
 	foreach ($diskUsedResults as $index => $row) {
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
