@@ -147,7 +147,7 @@ $(function() {
 				$('#elementId').val(uptimeCapacitySettings.elementId);
 			}
 
-			if (!myChart) {
+			if (myChart) {
 				settingChanged();
 			}
 		}).fail(function(jqXHR, textStatus, errorThrown) {
