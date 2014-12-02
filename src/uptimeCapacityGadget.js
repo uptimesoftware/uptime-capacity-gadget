@@ -214,6 +214,19 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
 
             //draw the actual lines on the chart
+
+            chart.addSeries({
+                name: dataname + " - Usage",
+                zindex: 2,
+                data: LineOfBestFitForRealMetrics
+            });
+
+            chart.addSeries({
+                name: dataname + " - Est",
+                zindex: 2,
+                data: LineOfBestFitForEstimatedMetrics
+            });
+
             chart.addSeries({
                 name: "Capacity",
                 zindex: 1,
@@ -230,17 +243,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 });
             }
 
-            chart.addSeries({
-                name: dataname + " - Usage",
-                zindex: 2,
-                data: LineOfBestFitForRealMetrics
-            });
+            chart.setSize(Math.max(100, dimensions.width - 10), Math.max(100, dimensions.height - 80));
 
-            chart.addSeries({
-                name: dataname + " - Est",
-                zindex: 2,
-                data: LineOfBestFitForEstimatedMetrics
-            });
 
         }
 
