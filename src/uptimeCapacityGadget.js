@@ -237,7 +237,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             if (capacityBuffer != 100)
             {
                 chart.addSeries({
-                    name: "Buffered Capacity",
+                    name: capacityBuffer + "% Capacity",
                     zindex: 1,
                     data: BufferedCapacityLine
                 });
