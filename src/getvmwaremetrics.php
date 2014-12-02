@@ -301,7 +301,7 @@ GROUP BY
 	$datastoreResults = $db->execQuery($datastoreSql);
 
 	$name = $datastoreResults[0]['NAME'];
-	$datastoreScale = 1;
+	$datastoreScale = 1e-6;
 
 	$capacity = floatval($datastoreResults[0]['TOTAL_CAPACITY'] * $datastoreScale);
 
@@ -310,22 +310,22 @@ GROUP BY
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
 		$x = $sample_time * 1000;
 
-		$data = array($x, floatval($row['MIN_USAGE'] / $datastoreScale ));
+		$data = array($x, floatval($row['MIN_USAGE'] * $datastoreScale ));
 		array_push($min_datastore_usage_array, $data);
 
-		$data = array($x, floatval($row['MAX_USAGE'] / $datastoreScale ));
+		$data = array($x, floatval($row['MAX_USAGE'] * $datastoreScale ));
 		array_push($max_datastore_usage_array, $data);
 
-		$data = array($x, floatval($row['AVG_USAGE'] / $datastoreScale ));
+		$data = array($x, floatval($row['AVG_USAGE'] * $datastoreScale ));
 		array_push($avg_datastore_usage_array, $data);
 
-		$data = array($x, floatval($row['MIN_PROV'] / $datastoreScale ));
+		$data = array($x, floatval($row['MIN_PROV'] * $datastoreScale ));
 		array_push($min_datastore_prov_array, $data);
 
-		$data = array($x, floatval($row['MAX_PROV'] / $datastoreScale ));
+		$data = array($x, floatval($row['MAX_PROV'] * $datastoreScale ));
 		array_push($max_datastore_prov_array, $data);
 
-		$data = array($x, floatval($row['AVG_PROV'] / $datastoreScale ));
+		$data = array($x, floatval($row['AVG_PROV'] * $datastoreScale ));
 		array_push($avg_datastore_prov_array, $data);
 	}
 
@@ -333,7 +333,7 @@ GROUP BY
 	if ($dailyVal == 'min')
 	{
 		$usage_series = array(
-			'name' => $name . " - Daily Actual Min",
+			'name' => $name . " - Daily Min",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $min_datastore_usage_array
@@ -349,7 +349,7 @@ GROUP BY
 	if ($dailyVal == 'max')
 	{
 		$usage_series = array(
-			'name' => $name . " - Daily Actual Max",
+			'name' => $name . " - Daily Max",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $max_datastore_usage_array
@@ -365,7 +365,7 @@ GROUP BY
 	if ($dailyVal == 'avg')
 	{
 		$usage_series = array(
-			'name' => $name . " - Daily Actual Avg",
+			'name' => $name . " - Daily Avg",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $avg_datastore_usage_array
@@ -381,10 +381,6 @@ GROUP BY
 	if (count($usage_series['series']) > 0)
 	{
 		array_push($json, $usage_series);
-	}
-	if (count($prov_series['series']) > 0)
-	{
-		array_push($json, $prov_series);
 	}
 	if (count($json) > 0)
 	{
