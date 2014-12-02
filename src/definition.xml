@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
 	<ModulePrefs title="Capacity Gadget"
-		description="Use this gadget to display the service monitor status in a pie or bar chart format for a single element."
-		thumbnail="elementStatusThm.png">
+		description="View and Estimate Capacity Metrics for Select Element Types."
+		thumbnail="capacity-gadget-icon.png">
 		<Require feature="dynamic-height" />
 	</ModulePrefs>
 	<gadget_version>
@@ -51,9 +51,14 @@
 				<div id="availableQueries">
 					Query Type:
 					<select id="QueryTypeSelector" class="query-type-setting">
-						<option value="Mem">Memory</option>
-						<option value="Cpu">Cpu</option>
-						<option value="Datastore">Datastore</option>
+
+						<option value="osperf-Mem">OS Memory</option>
+						<option value="osperf-Cpu">OS Cpu</option>
+						<option value="vmware-Mem">VMware Memory</option>
+						<option value="vmware-Cpu">VMware Cpu</option>
+						<option value="vmware-Datastore">VMware Datastore</option>
+						<option value="xenserver-Mem">Xenserver Memory</option>
+						<option value="xenserver-DiskUsed">Xenserver Disk Used</option>
 					</select>
 				</div>
 				<div id="availableElements">
@@ -62,7 +67,9 @@
 						<option value="-1">Loading...</option>
 					</select>
 				</div>
-				<div id="MonthyTimeFrame">
+
+
+				<div id="MonthlyTimeFrame">
 					Based on how many months of data?:
 					<select id="MonthSelector" class="time-frame-selector">
 						<option value="1">1</option>
@@ -81,14 +88,14 @@
 					Capacity Buffer:
 					<input type="range" name="capacityBuffer" id="capacitySlider" min="50" max="150"><div id="CurCapacityBuffer"></div>
 				<br/>
-				<div id="MetricType">
+				<div id="dailyVal">
 					Based on the daily what?:
 					<br/>
-					<input type="radio" checked id="avg" class="element-status-setting" name="metricType" value="avg"> Average
+					<input type="radio" id="max" class="element-status-setting" name="dailyVal" value="max"> Max
 					<br/>
-					<input type="radio" id="max" class="element-status-setting" name="metricType" value="max"> Max
+					<input type="radio" checked id="avg" class="element-status-setting" name="dailyVal" value="avg"> Average
 					<br/>
-					<input type="radio" id="min" class="element-status-setting" name="metricType" value="min"> Min
+					<input type="radio" id="min" class="element-status-setting" name="dailyVal" value="min"> Min
 					<br/>
 				</div>
 				<button id="closeSettings">Close</button>

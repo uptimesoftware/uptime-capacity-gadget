@@ -3,6 +3,7 @@ $(function() {
 	var currentURL = $("script#ownScript").attr("src");
     var getMetricsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getmetrics.php';
     var getDropDownsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getdropdowns.php';
+    var baseGadgetPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1);
 
     var date = new Date();
     var uptimeOffset = date.getTimezoneOffset()*60;
@@ -10,19 +11,15 @@ $(function() {
 	var api = new apiQueries();
 	var myChart = null;
 	var myChartDimensions = null;
-	var uptimeCapacitySettings = {
-		entityId : -1,
-		refreshInterval : 30,
-		chartTypeId : "pie",
-	};
+	var uptimeCapacitySettings = {};
 	var divsToDim = [ '#widgetChart', '#widgetSettings' ];
 
 	$("#widgetSettings").hide();
 
-	$('.query-type-setting').change(settingChanged);
+	$('.query-type-setting').change(queryTypeChanged);
 	$('.element-status-setting').change(settingChanged);
 	$('.time-frame-selector').change(settingChanged);
-	$('#widgetOptions input[name=metricType]:radio').change(settingChanged);
+	$('#widgetOptions input[name=dailyVal]:radio').change(settingChanged);
 	$('#capacitySlider').change(changeCapacityBuffer);
 
 
@@ -32,7 +29,7 @@ $(function() {
 
 	uptimeGadget.registerOnEditHandler(showEditPanel);
 	uptimeGadget.registerOnLoadHandler(function(onLoadData) {
-		myChartDimensions = toMyChartDimensions(onLoadData.dimensions);
+		myChartDimensions = toMyChartDimensions(onLoadData.dimensions, true);
 		if (onLoadData.hasPreloadedSettings()) {
 			goodLoad(onLoadData.settings);
 		} else {
@@ -45,35 +42,68 @@ $(function() {
 		return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 	};
 
-	monitorCount = function(count) {
-		if (count == 0) {
-			return "No monitors";
-		} else if (count == 1) {
-			return "1 monitor";
-		}
-		return count + " monitors";
-	};
-
 	function resizeGadget(dimensions) {
-		myChartDimensions = toMyChartDimensions(dimensions);
+		myChartDimensions = toMyChartDimensions(dimensions, false);
 		if (myChart) {
 			myChart.resize(myChartDimensions);
 		}
 		$("body").height($(window).height());
 	}
 
-	function toMyChartDimensions(dimensions) {
-		return new UPTIME.pub.gadgets.Dimensions(Math.max(100, dimensions.width - 5), Math.max(100, dimensions.height - 5));
+	function toMyChartDimensions(dimensions, initialLoad) {
+		if (initialLoad)
+		{
+			return new UPTIME.pub.gadgets.Dimensions(Math.max(100, dimensions.width - 5), Math.max(100, dimensions.height - 5));
+		}
+		else
+		{
+			return new UPTIME.pub.gadgets.Dimensions(Math.max(100, dimensions.width - 10), Math.max(100, dimensions.height - 80));
+		}
 	}
 
 	function settingChanged() {
-		uptimeCapacitySettings.metricType = $("#widgetOptions input[name=metricType]:radio:checked").val();
+		uptimeCapacitySettings.dailyVal = $("#dailyVal input[name=dailyVal]:radio:checked").val();
 		uptimeCapacitySettings.elementId = $('#elementId').find(":selected").val();
 		uptimeCapacitySettings.timeFrame = $('#MonthSelector').find(":selected").val();
 		uptimeCapacitySettings.queryType = $('#QueryTypeSelector').find(":selected").val();
 		uptimeCapacitySettings.capacityBuffer = $("#capacitySlider").val();
 		uptimeCapacitySettings.elementName = $('#elementId').find(":selected").text();
 		uptimeGadget.saveSettings(uptimeCapacitySettings).then(onGoodSave, onBadAjax);
+		console.log(uptimeCapacitySettings);
+	}
+
+	function queryTypeChanged() {
+		
+		queryType_val = $('#QueryTypeSelector').find(":selected").val();
+		queryType_split = queryType_val.split("-");
+
+
+		if (queryType_split[0] == 'vmware')
+		{
+			if (queryType_split[1] == 'Datastore')
+			{
+				populateIdSelector('getVMdatastores');
+			}
+			else
+			{
+				populateIdSelector('getVMobjects');
+			}
+		}
+		else if (queryType_split[0] == 'xenserver')
+		{
+			if (queryType_split[1] == 'DiskUsed')
+			{
+				populateIdSelector('getXenServerDatastores');
+			}
+			else {
+				populateIdSelector('getXenServers');	
+			}
+			
+		}
+		else if ( queryType_split[0] == 'osperf')
+		{
+			populateIdSelector('getAgentSystems');
+		}
 	}
 
 	function displayStatusBar(error, msg) {
@@ -96,13 +126,9 @@ $(function() {
 			myChart.stopTimer();
 		}
 
-		$("#widgetOptions input[name=chartType]").filter('[value=' + uptimeCapacitySettings.chartTypeId + ']').prop('checked',
-				true);
-		$('#elementId').val(uptimeCapacitySettings.elementId);
-
 		$("#widgetSettings").slideDown();
 		$("body").height($(window).height());
-		populateIdSelector();
+		queryTypeChanged();
 	}
 
 	function disableSettings() {
@@ -119,10 +145,10 @@ $(function() {
 		return naturalSort(arg1.name, arg2.name);
 	}
 
-	function populateIdSelector() {
+	function populateIdSelector(dropdown_querytype) {
 		disableSettings();
 		dropdownselector = '#elementId';
-		url = getDropDownsPath + "?uptime_offset=14400&query_type=getVMobjects";
+		url = getDropDownsPath + "?uptime_offset=14400&query_type=" + dropdown_querytype;
 		$(dropdownselector).empty().append($("<option />").val(-1).text("Loading..."));
 
 		$.getJSON(url, function(data) {
@@ -134,12 +160,17 @@ $(function() {
 				$(dropdownselector).append($("<option />").val(val).text(key));
 			});
 
-			if (!myChart) {
+			if ( uptimeCapacitySettings.elementId)
+			{
+				$('#elementId').val(uptimeCapacitySettings.elementId);
+			}
+
+			if (myChart) {
 				settingChanged();
 			}
 		}).fail(function(jqXHR, textStatus, errorThrown) {
 			console.log("Error with: " + url) ;
-			displayStatusBar(error, "Error Loading the List of Elements from up.time Controller");
+			displayStatusBar(errorThrown, "Error Loading the List of Elements from up.time Controller");
 		});
 
 
@@ -153,7 +184,7 @@ $(function() {
 			$("#MonthSelector").val(settings.timeFrame);
 			$("#capacitySlider").val(settings.capacityBuffer);
 			$("#CurCapacityBuffer").html(settings.capacityBuffer + "%");
-			$("#" + settings.metricType).prop("checked", true);
+			$("#" + settings.dailyVal).prop("checked", true);
 			$.extend(uptimeCapacitySettings, settings);
 			displayChart();
 		} else if (uptimeGadget.isOwner()) {
@@ -199,10 +230,10 @@ $(function() {
 
 
 		myChart = new UPTIME.UptimeCapacityGadget({
-			getMetricsPath : getMetricsPath + "?uptime_offset=" + uptimeOffset,
+			baseGadgetPath : baseGadgetPath,
 			dimensions : myChartDimensions,
 			chartDivId : "widgetChart",
-			metricType : uptimeCapacitySettings.metricType,
+			dailyVal : uptimeCapacitySettings.dailyVal,
 			queryType : uptimeCapacitySettings.queryType,
 			elementId : uptimeCapacitySettings.elementId,
 			timeFrame : uptimeCapacitySettings.timeFrame,
