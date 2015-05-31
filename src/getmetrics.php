@@ -270,6 +270,133 @@ GROUP BY
 
 }
 
+elseif ( $query_type == "osperf-Filesystem")
+{
+
+	$min_datastore_usage_array = array();
+	$max_datastore_usage_array = array();
+	$avg_datastore_usage_array = array();
+	$min_datastore_prov_array = array();
+	$max_datastore_prov_array = array();
+	$avg_datastore_prov_array = array();
+
+
+$datastoreSql = "SELECT 
+ 
+e.display_name as NAME, 
+date(s.sample_time) as SAMPLE_TIME,
+sum(a.total_size) as TOTAL_CAPACITY,
+sum(a.total_size) as TOTALSIZE ,
+	min(a.space_used) as MIN_FILESYS_USAGE,
+	max(a.space_used) as MAX_FILESYS_USAGE,
+	avg(a.space_used) as AVG_FILESYS_USAGE
+FROM 
+	performance_fscap a, performance_sample s, entity e
+WHERE 
+	s.id = a.sample_id AND 
+	s.uptimehost_id = e.entity_id AND
+	s.sample_time > date_sub(now(),interval ". $time_frame . " month) AND
+	e.entity_type_id = 1 AND
+	e.entity_id = $vmware_object_id
+GROUP BY 
+	sample_id";
+	
+
+
+	$datastoreResults = $db->execQuery($datastoreSql);
+
+	$total_size= $datastoreResults[0]['TOTALSIZE'];
+	$name = $datastoreResults[0]['NAME'];
+	$datastoreScale = 1e-6;
+
+	$capacity = floatval($datastoreResults[0]['TOTAL_CAPACITY'] * $datastoreScale);	
+
+
+
+
+
+		foreach ($datastoreResults as $index => $row) {
+		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
+		$x = $sample_time * 1000;
+
+		$data = array($x, floatval($row['MIN_FILESYS_USAGE'] * $datastoreScale ));
+		array_push($min_datastore_usage_array, $data);
+
+		$data = array($x, floatval($row['MAX_FILESYS_USAGE'] * $datastoreScale ));
+		array_push($max_datastore_usage_array, $data);
+
+		$data = array($x, floatval($row['AVG_FILESYS_USAGE'] * $datastoreScale ));
+		array_push($avg_datastore_usage_array, $data);
+
+	}
+
+
+
+	if ($dailyVal == 'min')
+	{
+		$usage_series = array(
+			'name' => $name . " - Daily Min",
+			'capacity' => $capacity,
+			'unit' => 'GBs',
+			'series' => $min_datastore_usage_array
+			);
+		$prov_series = array(
+			'name' => $name . " - Daily Provisioned Min",
+			'capacity' => $capacity,
+			'unit' => 'GBs',
+			'series' => $min_datastore_prov_array
+			);
+	}
+
+	if ($dailyVal == 'max')
+	{
+		$usage_series = array(
+			'name' => $name . " - Daily Max",
+			'capacity' => $capacity,
+			'unit' => 'GBs',
+			'series' => $max_datastore_usage_array
+			);
+		$prov_series = array(
+			'name' => $name . " - Daily Provisioned Max",
+			'capacity' => $capacity,
+			'unit' => 'GBs',
+			'series' => $max_datastore_prov_array
+			);
+	}
+
+	if ($dailyVal == 'avg')
+	{
+		$usage_series = array(
+			'name' => $name . " - Daily Avg",
+			'capacity' => $capacity,
+			'unit' => 'GBs',
+			'series' => $avg_datastore_usage_array
+			);
+		$prov_series = array(
+			'name' => $name . " - Daily Provisioned Avg",
+			'capacity' => $capacity,
+			'unit' => 'GBs',
+			'series' => $avg_datastore_prov_array
+			);
+	}
+
+	if (count($usage_series['series']) > 0)
+	{
+		array_push($json, $usage_series);
+	}
+	if (count($json) > 0)
+	{
+		echo json_encode($json);
+	}
+	else
+	{
+		echo "No Data";
+	}
+
+
+}
+
+
 
 
     

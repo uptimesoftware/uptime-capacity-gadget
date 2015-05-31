@@ -10,7 +10,7 @@
 	</gadget_version>
 	<grid_info>
 		<supported_versions>
-			7.3
+			7.3, 7.4,7.5
 		</supported_versions>
 		<supported_platforms>
 			windows,linux
@@ -54,6 +54,7 @@
 
 						<option value="osperf-Mem">OS Memory</option>
 						<option value="osperf-Cpu">OS Cpu</option>
+						<option value="osperf-Filesystem">OS Filesystem</option>
 						<option value="vmware-Mem">VMware Memory</option>
 						<option value="vmware-Cpu">VMware Cpu</option>
 						<option value="vmware-Datastore">VMware Datastore</option>
