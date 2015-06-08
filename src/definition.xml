@@ -6,7 +6,7 @@
 		<Require feature="dynamic-height" />
 	</ModulePrefs>
 	<gadget_version>
-		<%= pkg.gadget_version %>
+		0.5
 	</gadget_version>
 	<grid_info>
 		<supported_versions>
@@ -34,9 +34,9 @@
 
 		#includeResources(jquery,highcharts)
 		
-		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/apiQueries.js?v=<%= pkg.gadget_version %>"></script>
-		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityGadget.js?v=<%= pkg.gadget_version %>"></script>
-		<script type="text/javascript" id="ownScript" src="__UPTIME_GADGET_BASE__/uptimeCapacity.js?v=<%= pkg.gadget_version %>"></script>
+		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/apiQueries.js?v=0.5"></script>
+		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityGadget.js?v=0.5"></script>
+		<script type="text/javascript" id="ownScript" src="__UPTIME_GADGET_BASE__/uptimeCapacity.js?v=0.5"></script>
 		
 	</head>
 
