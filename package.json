@@ -1,11 +1,11 @@
 {
   "name": "uptime.CapacityGadget",
-  "version": "1.0.0",
-  "description": "The Enhanced Advanced All Services Tab",
+  "version": "1.0",
+  "description": "Capacity Planning Gadget",
   "main": "src/uptimeCapacity.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dan-uptimesoftware/uptime-allservices-gadget.git"
+    "url": "https://github.com/uptimesoftware/uptime-capacity-gadget.git"
   },
   "dependencies": {
     "uptime-gadget-tasks": "git://github.com/uptimesoftware/uptime-gadget-tasks.git"
