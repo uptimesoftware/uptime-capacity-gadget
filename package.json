@@ -1,6 +1,6 @@
 {
   "name": "uptime.CapacityGadget",
-  "version": "0.5.0",
+  "version": "1.0",
   "description": "The Enhanced Advanced All Services Tab",
   "main": "src/uptimeCapacity.js",
   "repository": {
