@@ -170,7 +170,7 @@ $(function() {
 			}
 		}).fail(function(jqXHR, textStatus, errorThrown) {
 			console.log("Error with: " + url) ;
-			displayStatusBar(errorThrown, "Error Loading the List of Elements from up.time Controller");
+			displayStatusBar(errorThrown, "Error Loading the List of Elements from Uptime Controller");
 		});
 
 
@@ -199,7 +199,7 @@ $(function() {
 	}
 
 	function onBadAjax(error) {
-		displayStatusBar(error, "Error Communicating with up.time");
+		displayStatusBar(error, "Error Communicating with Uptime");
 	}
 
 	function gadgetDimOn() {
