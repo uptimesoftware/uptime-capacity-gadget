@@ -1,119 +1,104 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-	<ModulePrefs title="Capacity Gadget"
-		description="View and Estimate Capacity Metrics for Select Element Types."
-		thumbnail="capacity-gadget-icon.png">
-		<Require feature="dynamic-height" />
-	</ModulePrefs>
-	<gadget_version>
-		1.0
-	</gadget_version>
-	<grid_info>
-		<supported_versions>
-			7.3,7.4,7.5,7.6,7.7,7.8
-		</supported_versions>
-		<supported_platforms>
-			windows,linux
-		</supported_platforms>
-		<requires_agent_scripts>
-			false
-		</requires_agent_scripts>
-		<upgrade_in_place>
-			true
-		</upgrade_in_place>
-	</grid_info>
-	<Content type="html">
+    <ModulePrefs
+        title="Capacity Gadget"
+        description="View and Estimate Capacity Metrics for Select Element Types."
+        thumbnail="capacity-gadget-icon.png">
+        <Require feature="dynamic-height" />
+    </ModulePrefs>
+    <gadget_version>
+        1.0
+    </gadget_version>
+    <grid_info>
+        <supported_versions>
+            7.3,7.4,7.5,7.6,7.7,7.8
+        </supported_versions>
+        <supported_platforms>
+            windows,linux
+        </supported_platforms>
+        <requires_agent_scripts>
+            false
+        </requires_agent_scripts>
+        <upgrade_in_place>
+            true
+        </upgrade_in_place>
+    </grid_info>
+    <Content type="html">
 <![CDATA[ 
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-		<title>Capacity Gadget</title>
-		<link href="__UPTIME_GADGET_BASE__/uptimeCapacity.css" type="text/css" rel="stylesheet" />
-
-		#includeResources(jquery,highcharts)
-		
-		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/apiQueries.js?v=0.5"></script>
-		<script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityGadget.js?v=0.5"></script>
-		<script type="text/javascript" id="ownScript" src="__UPTIME_GADGET_BASE__/uptimeCapacity.js?v=0.5"></script>
-		
-	</head>
-
-
-
-	<body>
-
-		<div id="widgetSettings">
-
-			<form id="widgetOptions">
-
-				<div id="availableQueries">
-					Query Type:
-					<select id="QueryTypeSelector" class="query-type-setting">
-
-						<option value="osperf-Mem">OS Memory</option>
-						<option value="osperf-Cpu">OS Cpu</option>
-						<option value="osperf-Filesystem">OS Filesystem</option>
-						<option value="vmware-Mem">VMware Memory</option>
-						<option value="vmware-Cpu">VMware Cpu</option>
-						<option value="vmware-Datastore">VMware Datastore</option>
-						<option value="hyperv-Mem">Hyper-V Memory</option>
-						<option value="hyperv-Cpu">Hyper-V Cpu</option>
-						<option value="hyperv-Datastore">Hyper-V Datastore</option>
-						<option value="xenserver-Mem">Xenserver Memory</option>
-						<option value="xenserver-DiskUsed">Xenserver Disk Used</option>
-					</select>
-				</div>
-				<div id="availableElements">
-					Select Element:
-					<select id="elementId" class="element-status-setting">
-						<option value="-1">Loading...</option>
-					</select>
-				</div>
-
-
-				<div id="MonthlyTimeFrame">
-					Based on how many months of data?:
-					<select id="MonthSelector" class="time-frame-selector">
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3" selected="selected">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
-						<option value="7">7</option>
-						<option value="8">8</option>
-						<option value="9">9</option>
-						<option value="10">10</option>
-					</select>
-				</div>
-				<div id="CapacitySliderDiv">
-					Capacity Buffer:
-					<input type="range" name="capacityBuffer" id="capacitySlider" min="50" max="150"><div id="CurCapacityBuffer"></div>
-				<br/>
-				<div id="dailyVal">
-					Based on the daily what?:
-					<br/>
-					<input type="radio" id="max" class="element-status-setting" name="dailyVal" value="max"> Max
-					<br/>
-					<input type="radio" checked id="avg" class="element-status-setting" name="dailyVal" value="avg"> Average
-					<br/>
-					<input type="radio" id="min" class="element-status-setting" name="dailyVal" value="min"> Min
-					<br/>
-				</div>
-				<button id="closeSettings">Close</button>
-			</form>
-		</div>
-
-		<div id ="countDownTillDoomsDay"></div>
-		<div id = "widgetChart"></div>
-		<div id="statusBar"></div>
-
-
-	</body>
-</html>
-
+    <head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	<title>Capacity Gadget</title>
+	<link href="__UPTIME_GADGET_BASE__/uptimeCapacity.css" type="text/css" rel="stylesheet" />
+	#includeResources(jquery,highcharts)
+	<script type="text/javascript" src="__UPTIME_GADGET_BASE__/apiQueries.js?v=0.5"></script>
+        <script type="text/javascript" src="__UPTIME_GADGET_BASE__/uptimeCapacityGadget.js?v=0.5"></script>
+	<script type="text/javascript" id="ownScript" src="__UPTIME_GADGET_BASE__/uptimeCapacity.js?v=0.5"></script>
+    </head>
+    <body>
+        <div id="widgetSettings">
+            <form id="widgetOptions">
+                    <div id="availableQueries">
+                        Query Type:
+			<select id="QueryTypeSelector" class="query-type-setting">
+                            <option value="osperf-Mem">OS Memory</option>
+                            <option value="osperf-Cpu">OS Cpu</option>
+                            <option value="osperf-Filesystem">OS Filesystem</option>
+                            <option value="vmware-Mem">VMware Memory</option>
+                            <option value="vmware-Cpu">VMware Cpu</option>
+                            <option value="vmware-Datastore">VMware Datastore</option>
+			    <option value="hyperv-Mem">Hyper-V Memory</option>
+			    <option value="hyperv-Cpu">Hyper-V Cpu</option>
+			    <option value="hyperv-Datastore">Hyper-V Datastore</option>
+                            <option value="xenserver-Mem">Xenserver Memory</option>
+                            <option value="xenserver-DiskUsed">Xenserver Disk Used</option>
+			</select>
+                    </div>
+                    <div id="availableElements">
+                        Select Element:
+			<select id="elementId" class="element-status-setting">
+                            <option value="-1">Loading...</option>
+			</select>
+                    </div>
+                    <div id="MonthlyTimeFrame">
+                        Based on how many months of data?:
+			<select id="MonthSelector" class="time-frame-selector">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected="selected">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+			</select>
+                    </div>
+                    <div id="CapacitySliderDiv">
+                        Capacity Buffer:
+			<input type="range" name="capacityBuffer" id="capacitySlider" min="50" max="150"><div id="CurCapacityBuffer"></div>
+			<br/>
+			<div id="dailyVal">
+			Based on the daily what?:
+			<br/>
+			<input type="radio" id="max" class="element-status-setting" name="dailyVal" value="max"> Max
+			<br/>
+			<input type="radio" checked id="avg" class="element-status-setting" name="dailyVal" value="avg"> Average
+			<br/>
+			<input type="radio" id="min" class="element-status-setting" name="dailyVal" value="min"> Min
+			<br/>
+			</div>
+                    <button id="closeSettings">Close</button>
+                </form>
+            </div>
+            <div id ="countDownTillDoomsDay"></div>
+            <div id = "widgetChart"></div>
+            <div id="statusBar"></div>
+        </body>
+    </html>
 ]]>
-	</Content>
+    </Content>
 </Module>

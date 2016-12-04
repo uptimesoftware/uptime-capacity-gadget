@@ -1,70 +1,70 @@
 if (typeof UPTIME == "undefined") {
-	var UPTIME = {};
+    var UPTIME = {};
 }
 
 if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
-	UPTIME.UptimeCapacityGadget = function(options, displayStatusBar, clearStatusBar) {
-		Highcharts.setOptions({
-			global : {
-				useUTC : false
-			}
-		});
+    UPTIME.UptimeCapacityGadget = function (options, displayStatusBar, clearStatusBar) {
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
 
-		var dimensions = new UPTIME.pub.gadgets.Dimensions(100, 100);
-		var chartDivId = null;
-		var elementId = null;
-		var dailyVal = null;
-		var queryType = null;
-		var timeFrame = null;
-		var chartTimer = null;
-		var capacityBuffer = 100;
-		var api = new apiQueries();
-		var baseGadgetPath = null;
+        var dimensions = new UPTIME.pub.gadgets.Dimensions(100, 100);
+        var chartDivId = null;
+        var elementId = null;
+        var dailyVal = null;
+        var queryType = null;
+        var timeFrame = null;
+        var chartTimer = null;
+        var capacityBuffer = 100;
+        var api = new apiQueries();
+        var baseGadgetPath = null;
 
-		var textStyle = {
-			fontFamily : "Verdana, Arial, Helvetica, sans-serif",
-			fontSize : "9px",
-			lineHeight : "11px",
-			color : "#565E6C"
-		};
+        var textStyle = {
+            fontFamily: "Verdana, Arial, Helvetica, sans-serif",
+            fontSize: "9px",
+            lineHeight: "11px",
+            color: "#565E6C"
+        };
 
-		if (typeof options == "object") {
-			dimensions = options.dimensions;
-			chartDivId = options.chartDivId;
-			dailyVal = options.dailyVal;
-			queryType = options.queryType;
-			elementId = options.elementId;
-			timeFrame = options.timeFrame;
-			capacityBuffer = options.capacityBuffer;
-			baseGadgetPath = options.baseGadgetPath;
-		}
+        if (typeof options == "object") {
+            dimensions = options.dimensions;
+            chartDivId = options.chartDivId;
+            dailyVal = options.dailyVal;
+            queryType = options.queryType;
+            elementId = options.elementId;
+            timeFrame = options.timeFrame;
+            capacityBuffer = options.capacityBuffer;
+            baseGadgetPath = options.baseGadgetPath;
+        }
 
-		var dataLabelsEnabled = false;
-		var chart = new Highcharts.Chart({
-			chart : {
-				renderTo: 'widgetChart',
+        var dataLabelsEnabled = false;
+        var chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'widgetChart',
                 type: 'line',
                 style: {fontFamily: 'Arial',
                     fontSize: '9px'},
                 spacingTop: 10,
                 spacingBottom: 10},
-            	title: {text: ""},
-            	credits: {enabled: false},
-            	xAxis: {type: 'datetime',
-    	            title: {enabled: true,
-        	        text: ""}},
-            	yAxis: {
-            	    title: {enabled: false,
+            title: {text: ""},
+            credits: {enabled: false},
+            xAxis: {type: 'datetime',
+                title: {enabled: true,
                     text: ""}},
-            	plotOptions: {spline: {marker: {enabled: false}},
-                    areaspline: {marker: {enabled: false}}},
-            	series: [],
-		});
+            yAxis: {
+                title: {enabled: false,
+                    text: ""}},
+            plotOptions: {spline: {marker: {enabled: false}},
+                areaspline: {marker: {enabled: false}}},
+            series: [],
+        });
 
-		function requestData() {
+        function requestData() {
 
-			var firstPoint = null;
-			var lastPoint = null;
+            var firstPoint = null;
+            var lastPoint = null;
 
             //find the beginning part of the queryType
             queryType_split = queryType.split("-");
@@ -86,37 +86,36 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             {
                 my_url = my_url + 'getxenmetrics.php' + '?uptime_offset=' + 14400 + '&query_type=' + queryType + '&dailyVal='  + dailyVal + "&element=" + elementId + "&time_frame=" + timeFrame;
             }
+            
             $.ajax({
-		        'async': true,
-		        'global': false,
-		        'url': my_url,
-		        'dataType': "json",
-		        'success': function (data) {
+                'async': true,
+                'global': false,
+                'url': my_url,
+                'dataType': "json",
+                'success': function (data) {
 
-		        	$.each(data, function(index, value) {
-		            	chart.addSeries({
-		            		name: value['name'],
-		            		data: value['series']
-						});
+                    $.each(data, function (index, value) {
+                        chart.addSeries({
+                            name: value['name'],
+                            data: value['series']
+                        });
 
-						addCapacityLines(value);
-					});
+                        addCapacityLines(value);
+                    });
 
-		        	clearStatusBar();
-					dataLabelsEnabled = true;
-					chart.hideLoading();
-		        },
-		        'error': function () {
-		        	$("#countDownTillDoomsDay").html("No Data");
-		        	chart.hideLoading();
-		        }
-	    	});	
-		}
+                    clearStatusBar();
+                    dataLabelsEnabled = true;
+                    chart.hideLoading();
+                },
+                'error': function () {
+                    $("#countDownTillDoomsDay").html("No Data");
+                    chart.hideLoading();
+                }
+            });
+        }
 
-		function addCapacityLines(data) {
+        function addCapacityLines(data) {
             //draw the various capacity and estimated usage lines
-
-
 
             //get the first and last points from the time series data
             timeseries = data['series'];
@@ -129,13 +128,10 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             last_Xvalue = lastPoint[0];
             last_Yvalue = lastPoint[1];
 
-
-
-
             xDeltaTotal = 0;
             yDeltaTotal = 0;
             //total up the difference between all the daily points
-            $.each(timeseries, function(index, value) {
+            $.each(timeseries, function (index, value) {
                 if (index >= 1)
                 {
                     xDelta = value[0] - timeseries[index - 1][0];
@@ -146,13 +142,12 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             });
 
             //get the average delta for both X and Y
-            xDelta = xDeltaTotal / (timeseries.length -1);//should be one day in ms
-            yDelta = yDeltaTotal / (timeseries.length -1);
+            xDelta = xDeltaTotal / (timeseries.length - 1);//should be one day in ms
+            yDelta = yDeltaTotal / (timeseries.length - 1);
 
             //get the total capacity value from our json data and figure out the buffered capacity cap
             capacityCap = data['capacity'];
-            capacityCapBuffered = data['capacity'] * ( capacityBuffer / 100);
-
+            capacityCapBuffered = data['capacity'] * (capacityBuffer / 100);
 
             //setup the various lines we'll need to draw
             CapacityLine = [[firstPoint[0], capacityCap]];
@@ -163,25 +158,23 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
             LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
 
-
             //setup some empty points as well
             bufferedcapacityWithNewVms = null;
             CapacityPoint = null;
             BufferedCapacityPoint = null;
 
             //we only need to figure out the capacity points if things are actualy trending upwards
-            if ( yDelta > 0 )
+            if (yDelta > 0)
             {
                 //if the starting point for our estimated usage line is below our capacity Cap
-                if( capacityCap > last_Yvalue)
+                if (capacityCap > last_Yvalue)
                 {
                     CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
                     CapacityLine.push(CapacityPoint);
-                    
+
                     BufferedCapacityPoint = figureOutCapacity(capacityCapBuffered, last_Xvalue, last_Yvalue, xDelta, yDelta);
                     BufferedCapacityLine.push(BufferedCapacityPoint);
 
-                     
                     //pass all these points along, so that we can populate the info panel.
                     fillInInfoPanel(lastPoint, CapacityPoint, BufferedCapacityPoint, yDelta, data['unit'], data['name']);
 
@@ -196,8 +189,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                         //so we need to add another point to the real Capacity Line
                         CapacityLine.push([BufferedCapacityPoint[0], CapacityPoint[1]]);
 
-                    }
-                    else
+                    } else
                     {
                         //otherwise if buffered capacity is less then real capacity
                         //then the buffered capacity point comes first
@@ -215,7 +207,6 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 BufferedCapacityLine.push([lastPoint[0], capacityCapBuffered]);
                 justAddTitletoDoomsday(yDelta, data['unit'], data['name']);
             }
-
 
             //draw the actual lines on the chart
 
@@ -248,10 +239,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             }
 
             chart.setSize(Math.max(100, dimensions.width - 10), Math.max(100, dimensions.height - 80));
-
-
         }
-
 
         function fillInInfoPanel(startpoint, capPoint, bufcapPoint, Delta, unit, seriesName)
         {
@@ -267,7 +255,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             if (capPoint)
             {
                 endtime = capPoint[0];
-                time_left =  (endtime - starttime);
+                time_left = (endtime - starttime);
                 time_left_in_days_till_Cap = Math.round(time_left / 1000 / 60 / 60 / 24);
                 overview_string += 'Days left until capacity: ' + time_left_in_days_till_Cap + "<br>";
 
@@ -277,7 +265,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             if (bufcapPoint && capacityBuffer != 100)
             {
                 endtime = bufcapPoint[0];
-                time_left =  (endtime - starttime);
+                time_left = (endtime - starttime);
                 time_left_in_days_till_BuffedCap = Math.round(time_left / 1000 / 60 / 60 / 24);
                 overview_string += "Days left until " + capacityBuffer + "% capacity: " + time_left_in_days_till_BuffedCap + "<br>";
             }
@@ -291,43 +279,43 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             $("#countDownTillDoomsDay").html("");
 
             overview_string = '<div id="infoTitle">' + seriesName + " over the past " + timeFrame + " months</div><br>";
-            overview_string +=  '<div id="infoText">Daily Usage Trending Downwards at ' + Delta.toFixed(2) + " " + unit + " per day</div>";
+            overview_string += '<div id="infoText">Daily Usage Trending Downwards at ' + Delta.toFixed(2) + " " + unit + " per day</div>";
             $("#countDownTillDoomsDay").html(overview_string);
 
         }
 
-		function figureOutCapacity( targetCapacity, startX, startY, deltaX, deltaY )
-		{
+        function figureOutCapacity(targetCapacity, startX, startY, deltaX, deltaY)
+        {
 
             CapacityLeft = targetCapacity - startY;
             timeToGo = CapacityLeft / deltaY;
             timeToGoInMS = timeToGo * deltaX;
             actualTime = timeToGoInMS + startX;
 
-            return [actualTime, targetCapacity ];
+            return [actualTime, targetCapacity];
 
-		}
+        }
 
-		// public functions for this function/class
-		var publicFns = {
-			render : function() {
-				chart.showLoading();
-				requestData();
-			},
-			resize : function(dimensions) {
-				chart.setSize(dimensions.width, dimensions.height);
-			},
-			stopTimer : function() {
-				if (chartTimer) {
-					window.clearTimeout(chartTimer);
-				}
-			},
-			destroy : function() {
-				chart.destroy();
-			}
-		};
-		return publicFns; // Important: we need to return the public
-		// functions/methods
+        // public functions for this function/class
+        var publicFns = {
+            render: function () {
+                chart.showLoading();
+                requestData();
+            },
+            resize: function (dimensions) {
+                chart.setSize(dimensions.width, dimensions.height);
+            },
+            stopTimer: function () {
+                if (chartTimer) {
+                    window.clearTimeout(chartTimer);
+                }
+            },
+            destroy: function () {
+                chart.destroy();
+            }
+        };
+        return publicFns; // Important: we need to return the public
+        // functions/methods
 
-	};
+    };
 }

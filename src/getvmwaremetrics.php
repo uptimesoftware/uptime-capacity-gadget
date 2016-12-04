@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 //DISCLAIMER:
 //LIMITATION OF LIABILITY: uptime software does not warrant that software obtained
@@ -13,30 +13,26 @@
 //indirect, incidental, consequential, special, exemplary or punitive damages or
 //lost profits even if uptime software has been advised of the possibility of such
 //damages.
-
 // Set the JSON header
 header("Content-type: text/json");
-
 include("uptimeDB.php");
 
-if (isset($_GET['query_type'])){
-	$query_type = $_GET['query_type'];
+if (isset($_GET['query_type'])) {
+    $query_type = $_GET['query_type'];
 }
-if (isset($_GET['uptime_offset'])){
-	$offset = $_GET['uptime_offset'];
+if (isset($_GET['uptime_offset'])) {
+    $offset = $_GET['uptime_offset'];
 }
-if (isset($_GET['time_frame'])){
-	$time_frame = $_GET['time_frame'];
+if (isset($_GET['time_frame'])) {
+    $time_frame = intval($_GET['time_frame']);
+} else {
+    $time_frame = 3;
 }
-else
-{
-	$time_frame = 3;
+if (isset($_GET['dailyVal'])) {
+    $dailyVal = $_GET['dailyVal'];
 }
-if (isset($_GET['dailyVal'])){
-	$dailyVal = $_GET['dailyVal'];
-}
-if (isset($_GET['element'])){
-	$vmware_object_id = $_GET['element'];
+if (isset($_GET['element'])) {
+    $vmware_object_id = intval($_GET['element']);
 }
 $json = array();
 $oneElement = array();
@@ -44,233 +40,323 @@ $performanceData = array();
 //date_default_timezone_set('UTC');
 
 $db = new uptimeDB;
-if ($db->connectDB())
-{
-	echo "";
-
-}
-else
-{
- echo "unable to connect to DB exiting";	
- exit(1);
+if ($db->connectDB()) {
+    echo "";
+} else {
+    echo "unable to connect to DB exiting";
+    exit(1);
 }
 
+if ($query_type == "vmware-Mem") {
 
-if ($query_type == "vmware-Mem")
-{
+    $min_mem_usage_array = array();
+    $max_mem_usage_array = array();
+    $avg_mem_usage_array = array();
 
-	$min_mem_usage_array = array();
-	$max_mem_usage_array = array();
-	$avg_mem_usage_array = array();
+    $sql = "
+        SET nocount ON;
+        DECLARE @vmware_object_id int;
+        DECLARE @time_frame int;
+        DECLARE @time_from date;
 
+        SET @vmware_object_id = $vmware_object_id;
+        SET @time_frame = $time_frame;
+        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
 
-	$sql = "SELECT 
-		s.vmware_object_id, 
+        SELECT
+            s.vmware_object_id,
+            o.vmware_name as NAME,
+            MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+            min(a.memory_usage) as MIN_MEM_USAGE,
+            max(a.memory_usage) as MAX_MEM_USAGE,
+            avg(a.memory_usage) as AVG_MEM_USAGE,
+            min(a.memory_total) as TOTAL_CAPACITY
+	FROM
+            vmware_perf_aggregate a
+	JOIN vmware_perf_sample s
+            ON (
+                s.sample_id = a.sample_id AND
+                s.sample_time > @time_from
+            )
+	JOIN vmware_object o
+            ON (
+                s.vmware_object_id = o.vmware_object_id AND
+                s.vmware_object_id = @vmware_object_id
+            )
+        GROUP BY
+            s.vmware_object_id,
+            o.vmware_name,
+            year(s.sample_time),
+            month(s.sample_time),
+            day(s.sample_time)";
+
+    $mysql = "SELECT
+		s.vmware_object_id,
 		o.vmware_name as NAME,
 		date(s.sample_time) as SAMPLE_TIME,
 		min(a.memory_usage) as MIN_MEM_USAGE,
 		max(a.memory_usage) as MAX_MEM_USAGE,
 		avg(a.memory_usage) as AVG_MEM_USAGE,
 		a.memory_total		as TOTAL_CAPACITY,
-		day(s.sample_time), 
-		month(s.sample_time), 
-		year(s.sample_time) 
-	FROM 
+		day(s.sample_time),
+		month(s.sample_time),
+		year(s.sample_time)
+	FROM
 		vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
-	WHERE 
-		s.sample_id = a.sample_id AND 
+	WHERE
+		s.sample_id = a.sample_id AND
 		s.vmware_object_id = o.vmware_object_id AND
-		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-		s.vmware_object_id = $vmware_object_id
-	GROUP BY 
+		s.sample_time > date_sub(now(),interval  " . $time_frame . " month) AND
+		s.vmware_object_id = " .$vmware_object_id . "
+        GROUP BY
 		s.vmware_object_id,
 		year(s.sample_time),
-		month(s.sample_time), 
+		month(s.sample_time),
 		day(s.sample_time)";
 
-	$hostMemResults = $db->execQuery($sql);
-
-	$name = $hostMemResults[0]['NAME'];
-	$memScale = 1e-6;
-
-	foreach ($hostMemResults as $index => $row) {
-		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
-		$x = $sample_time * 1000;
-
-		$data = array($x, floatval($row['MIN_MEM_USAGE'] * $memScale ));
-		array_push($min_mem_usage_array, $data);
-
-		$data = array($x, floatval($row['MAX_MEM_USAGE'] * $memScale ));
-		array_push($max_mem_usage_array, $data);
-
-		$data = array($x, floatval($row['AVG_MEM_USAGE'] * $memScale ));
-		array_push($avg_mem_usage_array, $data);
+	if ($db->dbType == 'mysql'){
+		$hostMemResults = $db->execQuery($mysql);
+	} else{
+		$hostMemResults = $db->execQuery($sql);
 	}
 
-	$capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
+    
+    $name = $hostMemResults[0]['NAME'];
+    $memScale = 1e-6;
 
-	if ($dailyVal == 'min')
-	{
-		$my_series = array(
-			'name' => $name . " - Daily Mem Min",
-			'capacity' => $capacity,
-			'unit' => 'GB',
-			'series' => $min_mem_usage_array
-			);
-	}
+    foreach ($hostMemResults as $index => $row) {
+        $sample_time = strtotime($row['SAMPLE_TIME']) - $offset;
+        $x = $sample_time * 1000;
 
-	if ($dailyVal == 'max')
-	{
-		$my_series = array(
-			'name' => $name . " - Daily Mem Max",
-			'capacity' => $capacity,
-			'unit' => 'GB',
-			'series' => $max_mem_usage_array
-			);
-	}
+        $data = array($x, floatval($row['MIN_MEM_USAGE'] * $memScale));
+        array_push($min_mem_usage_array, $data);
 
-	if ($dailyVal == 'avg')
-	{
-		$my_series = array(
-			'name' => $name . " - Daily Mem Avg",
-			'capacity' => $capacity,
-			'unit' => 'GB',
-			'series' => $avg_mem_usage_array
-			);
-	}
+        $data = array($x, floatval($row['MAX_MEM_USAGE'] * $memScale));
+        array_push($max_mem_usage_array, $data);
 
+        $data = array($x, floatval($row['AVG_MEM_USAGE'] * $memScale));
+        array_push($avg_mem_usage_array, $data);
+    }
 
-	if (count($my_series['series']) > 0)
-	{
-		array_push($json, $my_series);
-	}
-	if (count($json) > 0)
-	{
-		echo json_encode($json);
-	}
-	else
-	{
-		echo "No Data";
-	}
-}
-elseif ($query_type == "vmware-Cpu")
-{
+    $capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
 
-	$min_cpu_usage_array = array();
-	$max_cpu_usage_array = array();
-	$avg_cpu_usage_array = array();
+    if ($dailyVal == 'min') {
+        $my_series = array(
+            'name' => $name . " - Daily Mem Min",
+            'capacity' => $capacity,
+            'unit' => 'GB',
+            'series' => $min_mem_usage_array
+        );
+    }
 
+    if ($dailyVal == 'max') {
+        $my_series = array(
+            'name' => $name . " - Daily Mem Max",
+            'capacity' => $capacity,
+            'unit' => 'GB',
+            'series' => $max_mem_usage_array
+        );
+    }
 
+    if ($dailyVal == 'avg') {
+        $my_series = array(
+            'name' => $name . " - Daily Mem Avg",
+            'capacity' => $capacity,
+            'unit' => 'GB',
+            'series' => $avg_mem_usage_array
+        );
+    }
 
-	$sql = "SELECT 
-		s.vmware_object_id, 
+    if (count($my_series['series']) > 0) {
+        array_push($json, $my_series);
+    }
+    if (count($json) > 0) {
+        echo json_encode($json);
+    } else {
+        echo "No Data";
+    }
+} elseif ($query_type == "vmware-Cpu") {
+
+    $min_cpu_usage_array = array();
+    $max_cpu_usage_array = array();
+    $avg_cpu_usage_array = array();
+
+    $sql = "
+        SET nocount ON;
+        DECLARE @vmware_object_id int;
+        DECLARE @time_frame int;
+        DECLARE @time_from date;
+
+        SET @vmware_object_id = $vmware_object_id;
+        SET @time_frame = $time_frame;
+        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
+
+        SELECT
+            s.vmware_object_id,
+            o.vmware_name as NAME,
+            min(cast(s.sample_time as date)) as SAMPLE_TIME,
+            min(a.cpu_usage) as MIN_CPU_USAGE,
+            max(a.cpu_usage) as MAX_CPU_USAGE,
+            avg(a.cpu_usage) as AVG_CPU_USAGE,
+            min(a.cpu_total) as TOTAL_CAPACITY
+	FROM
+            vmware_perf_aggregate a
+	JOIN vmware_perf_sample s
+            ON (
+		s.sample_id = a.sample_id AND
+		s.sample_time > @time_from
+            )
+	JOIN vmware_object o
+            ON (
+		s.vmware_object_id = o.vmware_object_id AND
+		s.vmware_object_id = @vmware_object_id
+            )
+        GROUP BY
+            s.vmware_object_id,
+            o.vmware_name,
+            year(s.sample_time),
+            month(s.sample_time),
+            day(s.sample_time)";
+        
+    $mysql = "SELECT
+		s.vmware_object_id,
 		o.vmware_name as NAME,
 		date(s.sample_time) as SAMPLE_TIME,
 		min(a.cpu_usage) as MIN_CPU_USAGE,
 		max(a.cpu_usage) as MAX_CPU_USAGE,
 		avg(a.cpu_usage) as AVG_CPU_USAGE,
 		a.cpu_total as TOTAL_CAPACITY,
-		day(s.sample_time), 
-		month(s.sample_time), 
-		year(s.sample_time) 
-	FROM 
+		day(s.sample_time),
+		month(s.sample_time),
+		year(s.sample_time)
+	FROM
 		vmware_perf_aggregate a, vmware_perf_sample s, vmware_object o
-	WHERE 
-		s.sample_id = a.sample_id AND 
+	WHERE
+		s.sample_id = a.sample_id AND
 		s.vmware_object_id = o.vmware_object_id AND
-		s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
+		s.sample_time > date_sub(now(),interval  " . $time_frame . " month) AND
 		s.vmware_object_id = $vmware_object_id
 
-	GROUP BY 
+	GROUP BY
 		s.vmware_object_id,
 		year(s.sample_time),
-		month(s.sample_time), 
+		month(s.sample_time),
 		day(s.sample_time)";
 
-	$hostCpuResults = $db->execQuery($sql);
-
-	$name = $hostCpuResults[0]['NAME'];
-	$cpuScale = 1000;
-
-	foreach ($hostCpuResults as $index => $row) {
-		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
-		$x = $sample_time * 1000;
-
-		$data = array($x, floatval($row['MIN_CPU_USAGE'] / $cpuScale ));
-		array_push($min_cpu_usage_array, $data);
-
-		$data = array($x, floatval($row['MAX_CPU_USAGE'] / $cpuScale ));
-		array_push($max_cpu_usage_array, $data);
-
-		$data = array($x, floatval($row['AVG_CPU_USAGE'] / $cpuScale ));
-		array_push($avg_cpu_usage_array, $data);
+	if ($db->dbType == 'mysql'){
+		$hostCpuResults = $db->execQuery($mysql);
+	} else{
+		$hostCpuResults = $db->execQuery($sql);
 	}
 
-	$capacity = floatval($hostCpuResults[0]['TOTAL_CAPACITY'] / $cpuScale);
+    $name = $hostCpuResults[0]['NAME'];
+    $cpuScale = 1000;
 
-	if ($dailyVal == 'min')
-	{
-		$my_series = array(
-			'name' => $name . " - Daily Cpu Min",
-			'capacity' => $capacity,
-			'unit' => 'GHz',
-			'series' => $min_cpu_usage_array
-			);
-	}
+    foreach ($hostCpuResults as $index => $row) {
+        $sample_time = strtotime($row['SAMPLE_TIME']) - $offset;
+        $x = $sample_time * 1000;
 
-	if ($dailyVal == 'max')
-	{
-		$my_series = array(
-			'name' => $name . " - Daily Cpu Max",
-			'capacity' => $capacity,
-			'unit' => 'GHz',
-			'series' => $max_cpu_usage_array
-			);
-	}
+        $data = array($x, floatval($row['MIN_CPU_USAGE'] / $cpuScale));
+        array_push($min_cpu_usage_array, $data);
 
-	if ($dailyVal == 'avg')
-	{
-		$my_series = array(
-			'name' => $name . " - Daily Cpu Avg",
-			'capacity' => $capacity,
-			'unit' => 'GHz',
-			'series' => $avg_cpu_usage_array
-			);
-	}
+        $data = array($x, floatval($row['MAX_CPU_USAGE'] / $cpuScale));
+        array_push($max_cpu_usage_array, $data);
 
-	if (count($my_series['series']) > 0)
-	{
-		array_push($json, $my_series);
-	}
-	if (count($json) > 0)
-	{
-		echo json_encode($json);
-	}
-	else
-	{
-		echo "No Data";
-	}
+        $data = array($x, floatval($row['AVG_CPU_USAGE'] / $cpuScale));
+        array_push($avg_cpu_usage_array, $data);
+    }
 
+    $capacity = floatval($hostCpuResults[0]['TOTAL_CAPACITY'] / $cpuScale);
 
+    if ($dailyVal == 'min') {
+        $my_series = array(
+            'name' => $name . " - Daily Cpu Min",
+            'capacity' => $capacity,
+            'unit' => 'GHz',
+            'series' => $min_cpu_usage_array
+        );
+    }
 
+    if ($dailyVal == 'max') {
+        $my_series = array(
+            'name' => $name . " - Daily Cpu Max",
+            'capacity' => $capacity,
+            'unit' => 'GHz',
+            'series' => $max_cpu_usage_array
+        );
+    }
 
+    if ($dailyVal == 'avg') {
+        $my_series = array(
+            'name' => $name . " - Daily Cpu Avg",
+            'capacity' => $capacity,
+            'unit' => 'GHz',
+            'series' => $avg_cpu_usage_array
+        );
+    }
 
-}
+    if (count($my_series['series']) > 0) {
+        array_push($json, $my_series);
+    }
+    if (count($json) > 0) {
+        echo json_encode($json);
+    } else {
+        echo "No Data";
+    }
+} elseif ($query_type == "vmware-Datastore") {
 
-elseif ( $query_type == "vmware-Datastore")
-{
+    $min_datastore_usage_array = array();
+    $max_datastore_usage_array = array();
+    $avg_datastore_usage_array = array();
+    $min_datastore_prov_array = array();
+    $max_datastore_prov_array = array();
+    $avg_datastore_prov_array = array();
 
-	$min_datastore_usage_array = array();
-	$max_datastore_usage_array = array();
-	$avg_datastore_usage_array = array();
-	$min_datastore_prov_array = array();
-	$max_datastore_prov_array = array();
-	$avg_datastore_prov_array = array();
+    $datastoreSql = "
+        SET nocount ON;
+        DECLARE @vmware_object_id int;
+        DECLARE @time_frame int;
+        DECLARE @time_from date;
 
+        SET @vmware_object_id = $vmware_object_id;
+        SET @time_frame = $time_frame;
+        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
 
+        SELECT
+            s.vmware_object_id,
+            o.vmware_name as NAME,
+            min(cast(s.sample_time as date)) as SAMPLE_TIME,
+            min(u.usage_total) as MIN_USAGE,
+            max(u.usage_total) as MAX_USAGE,
+            avg(u.usage_total) as AVG_USAGE,
+            min(u.provisioned) as MIN_PROV,
+            max(u.provisioned) as MAX_PROV,
+            avg(u.provisioned) as AVG_PROV,
+			(SELECT capacity FROM vmware_perf_datastore_usage vpdu
+				INNER JOIN vmware_latest_datastore_sample vlds 
+				ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = @vmware_object_id) AS CURR_CAPACITY,
+            min(u.capacity) as TOTAL_CAPACITY
+        FROM
+            vmware_perf_datastore_usage u
+	JOIN vmware_perf_sample s
+            ON (
+                s.sample_id = u.sample_id AND
+                s.sample_time > @time_from
+            )
+	JOIN vmware_object o
+            ON (
+                s.vmware_object_id = o.vmware_object_id AND
+                s.vmware_object_id = @vmware_object_id
+            )
+        GROUP BY
+            s.vmware_object_id,
+            o.vmware_name,
+            year(s.sample_time),
+            month(s.sample_time),
+            day(s.sample_time)";
 
-	$datastoreSql = "SELECT 
-	s.vmware_object_id, 
+    $datastoremySql = "SELECT
+	s.vmware_object_id,
 	o.vmware_name as NAME,
 	date(s.sample_time) as SAMPLE_TIME,
 	min(u.usage_total) as MIN_USAGE,
@@ -279,128 +365,116 @@ elseif ( $query_type == "vmware-Datastore")
 	min(u.provisioned) as MIN_PROV,
 	max(u.provisioned) as MAX_PROV,
 	avg(u.provisioned) as AVG_PROV,
+	(SELECT capacity FROM vmware_perf_datastore_usage vpdu
+	INNER JOIN uptime.vmware_latest_datastore_sample vlds 
+	ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = $vmware_object_id) AS CURR_CAPACITY,
 	u.capacity as TOTAL_CAPACITY,
-	day(s.sample_time), 
-	month(s.sample_time), 
-	year(s.sample_time) 
-FROM 
+	day(s.sample_time),
+	month(s.sample_time),
+	year(s.sample_time)
+FROM
 	vmware_perf_datastore_usage u, vmware_perf_sample s, vmware_object o
-WHERE 
-	s.sample_id = u.sample_id AND 
+WHERE
+	s.sample_id = u.sample_id AND
 	s.vmware_object_id = o.vmware_object_id AND
 	s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
 	s.vmware_object_id = $vmware_object_id
 
-GROUP BY 
+GROUP BY
 	s.vmware_object_id,
 	year(s.sample_time),
-	month(s.sample_time), 
+	month(s.sample_time),
 	day(s.sample_time)";
 
-
-	$datastoreResults = $db->execQuery($datastoreSql);
-
-	$name = $datastoreResults[0]['NAME'];
-	$datastoreScale = 1e-6;
-
-	$capacity = floatval($datastoreResults[0]['TOTAL_CAPACITY'] * $datastoreScale);
-
-
-	foreach ($datastoreResults as $index => $row) {
-		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
-		$x = $sample_time * 1000;
-
-		$data = array($x, floatval($row['MIN_USAGE'] * $datastoreScale ));
-		array_push($min_datastore_usage_array, $data);
-
-		$data = array($x, floatval($row['MAX_USAGE'] * $datastoreScale ));
-		array_push($max_datastore_usage_array, $data);
-
-		$data = array($x, floatval($row['AVG_USAGE'] * $datastoreScale ));
-		array_push($avg_datastore_usage_array, $data);
-
-		$data = array($x, floatval($row['MIN_PROV'] * $datastoreScale ));
-		array_push($min_datastore_prov_array, $data);
-
-		$data = array($x, floatval($row['MAX_PROV'] * $datastoreScale ));
-		array_push($max_datastore_prov_array, $data);
-
-		$data = array($x, floatval($row['AVG_PROV'] * $datastoreScale ));
-		array_push($avg_datastore_prov_array, $data);
+	if ($db->dbType == 'mysql'){
+		$datastoreResults = $db->execQuery($datastoremySql);
+	} else{
+		$datastoreResults = $db->execQuery($datastoreSql);
 	}
 
+    $name = $datastoreResults[0]['NAME'];
+    $datastoreScale = 1e-6;
 
-	if ($dailyVal == 'min')
-	{
-		$usage_series = array(
-			'name' => $name . " - Daily Min",
-			'capacity' => $capacity,
-			'unit' => 'GBs',
-			'series' => $min_datastore_usage_array
-			);
-		$prov_series = array(
-			'name' => $name . " - Daily Provisioned Min",
-			'capacity' => $capacity,
-			'unit' => 'GBs',
-			'series' => $min_datastore_prov_array
-			);
-	}
+	$capacity = floatval($datastoreResults[0]['CURR_CAPACITY'] * $datastoreScale);
 
-	if ($dailyVal == 'max')
-	{
-		$usage_series = array(
-			'name' => $name . " - Daily Max",
-			'capacity' => $capacity,
-			'unit' => 'GBs',
-			'series' => $max_datastore_usage_array
-			);
-		$prov_series = array(
-			'name' => $name . " - Daily Provisioned Max",
-			'capacity' => $capacity,
-			'unit' => 'GBs',
-			'series' => $max_datastore_prov_array
-			);
-	}
+    foreach ($datastoreResults as $index => $row) {
+        $sample_time = strtotime($row['SAMPLE_TIME']) - $offset;
+        $x = $sample_time * 1000;
 
-	if ($dailyVal == 'avg')
-	{
-		$usage_series = array(
-			'name' => $name . " - Daily Avg",
-			'capacity' => $capacity,
-			'unit' => 'GBs',
-			'series' => $avg_datastore_usage_array
-			);
-		$prov_series = array(
-			'name' => $name . " - Daily Provisioned Avg",
-			'capacity' => $capacity,
-			'unit' => 'GBs',
-			'series' => $avg_datastore_prov_array
-			);
-	}
+        $data = array($x, floatval($row['MIN_USAGE'] * $datastoreScale));
+        array_push($min_datastore_usage_array, $data);
 
-	if (count($usage_series['series']) > 0)
-	{
-		array_push($json, $usage_series);
-	}
-	if (count($json) > 0)
-	{
-		echo json_encode($json);
-	}
-	else
-	{
-		echo "No Data";
-	}
+        $data = array($x, floatval($row['MAX_USAGE'] * $datastoreScale));
+        array_push($max_datastore_usage_array, $data);
 
+        $data = array($x, floatval($row['AVG_USAGE'] * $datastoreScale));
+        array_push($avg_datastore_usage_array, $data);
 
-}
+        $data = array($x, floatval($row['MIN_PROV'] * $datastoreScale));
+        array_push($min_datastore_prov_array, $data);
 
-	
+        $data = array($x, floatval($row['MAX_PROV'] * $datastoreScale));
+        array_push($max_datastore_prov_array, $data);
 
-
-    
-// Unsupported request
-else {
-    echo "Error: Unsupported Request '$query_type'" . "</br>";
+        $data = array($x, floatval($row['AVG_PROV'] * $datastoreScale));
+        array_push($avg_datastore_prov_array, $data);
     }
 
+    if ($dailyVal == 'min') {
+        $usage_series = array(
+            'name' => $name . " - Daily Min",
+            'capacity' => $capacity,
+            'unit' => 'GBs',
+            'series' => $min_datastore_usage_array
+        );
+        $prov_series = array(
+            'name' => $name . " - Daily Provisioned Min",
+            'capacity' => $capacity,
+            'unit' => 'GBs',
+            'series' => $min_datastore_prov_array
+        );
+    }
+
+    if ($dailyVal == 'max') {
+        $usage_series = array(
+            'name' => $name . " - Daily Max",
+            'capacity' => $capacity,
+            'unit' => 'GBs',
+            'series' => $max_datastore_usage_array
+        );
+        $prov_series = array(
+            'name' => $name . " - Daily Provisioned Max",
+            'capacity' => $capacity,
+            'unit' => 'GBs',
+            'series' => $max_datastore_prov_array
+        );
+    }
+
+    if ($dailyVal == 'avg') {
+        $usage_series = array(
+            'name' => $name . " - Daily Avg",
+            'capacity' => $capacity,
+            'unit' => 'GBs',
+            'series' => $avg_datastore_usage_array
+        );
+        $prov_series = array(
+            'name' => $name . " - Daily Provisioned Avg",
+            'capacity' => $capacity,
+            'unit' => 'GBs',
+            'series' => $avg_datastore_prov_array
+        );
+    }
+
+    if (count($usage_series['series']) > 0) {
+        array_push($json, $usage_series);
+    }
+    if (count($json) > 0) {
+        echo json_encode($json);
+    } else {
+        echo "No Data";
+    }
+}
+
+// Unsupported request
+else {echo "Error: Unsupported Request '$query_type'" . "</br>";}
 ?>
