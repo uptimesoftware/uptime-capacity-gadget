@@ -100,8 +100,6 @@ if ($query_type == "hyperv-Mem")
             month(s.sample_time),
             day(s.sample_time)";
 			
-	
-
 	$oracle = "SELECT 
 		s.hyperv_object_id, 
 		o.hyperv_name as NAME,
@@ -125,8 +123,11 @@ if ($query_type == "hyperv-Mem")
 		o.hyperv_name,
 		EXTRACT(YEAR FROM s.sample_time),
 		EXTRACT(MONTH FROM s.sample_time), 
+		EXTRACT(DAY FROM s.sample_time)
+	ORDER BY
+		EXTRACT(YEAR FROM s.sample_time),
+		EXTRACT(MONTH FROM s.sample_time), 
 		EXTRACT(DAY FROM s.sample_time)";
-
 
 	$mysql = "SELECT 
 		s.hyperv_object_id, 
@@ -225,7 +226,6 @@ if ($query_type == "hyperv-Mem")
 }
 elseif ($query_type == "hyperv-Cpu")
 {
-
 	$min_cpu_usage_array = array();
 	$max_cpu_usage_array = array();
 	$avg_cpu_usage_array = array();
@@ -266,8 +266,7 @@ elseif ($query_type == "hyperv-Cpu")
             year(s.sample_time),
             month(s.sample_time),
             day(s.sample_time)";
-			
-			
+				
 	$oracle = "SELECT 
 		s.hyperv_object_id, 
 		o.hyperv_name as NAME,
@@ -292,8 +291,11 @@ elseif ($query_type == "hyperv-Cpu")
 		o.hyperv_name,
 		EXTRACT(YEAR FROM s.sample_time),
 		EXTRACT(MONTH FROM s.sample_time), 
+		EXTRACT(DAY FROM s.sample_time)
+	ORDER BY
+		EXTRACT(YEAR FROM s.sample_time),
+		EXTRACT(MONTH FROM s.sample_time), 
 		EXTRACT(DAY FROM s.sample_time)";		
-
 
 	$mysql = "SELECT 
 		s.hyperv_object_id, 
@@ -389,16 +391,10 @@ elseif ($query_type == "hyperv-Cpu")
 	{
 		echo "No Data";
 	}
-
-
-
-
-
 }
 
 elseif ( $query_type == "hyperv-Datastore")
 {
-
 	$min_datastore_usage_array = array();
 	$max_datastore_usage_array = array();
 	$avg_datastore_usage_array = array();
@@ -473,10 +469,13 @@ elseif ( $query_type == "hyperv-Datastore")
 		s.hyperv_object_id = o.hyperv_object_id AND
 		s.sample_time > ADD_MONTHS(SYSDATE, -".$time_frame.") AND
 		s.hyperv_object_id = $hyperv_object_id
-
 	GROUP BY 
 		s.hyperv_object_id,
 		o.hyperv_name,
+		EXTRACT(YEAR FROM s.sample_time),
+		EXTRACT(MONTH FROM s.sample_time), 
+		EXTRACT(DAY FROM s.sample_time)
+	ORDER BY
 		EXTRACT(YEAR FROM s.sample_time),
 		EXTRACT(MONTH FROM s.sample_time), 
 		EXTRACT(DAY FROM s.sample_time)";		
