@@ -138,6 +138,7 @@ class uptimeDB {
                 $row = array_change_key_case($row, CASE_UPPER);
                 array_push($output, $row);
             }
+			odbc_free_result($result);
             return $output;
         }
     }
@@ -152,23 +153,34 @@ class uptimeDB {
                 $row = array_change_key_case($row, CASE_UPPER);
                 array_push($output, $row);
             }
+			odbc_free_result($result);	
             return $output;
         }
     }
 
-    private function execMssqlQuery($sql) {
-        $output = array();
-	$result = odbc_exec($this->DB, $sql);
-	if (!$result) {
-            die("Invalid Query: " . odbc_errormsg());
-	} else {
-            while($row = odbc_fetch_array($result)) {   
-                $row = array_change_key_case($row, CASE_UPPER);
-                array_push($output, $row);
-            }
-            return $output;
-        }
-        odbc_free_result($result);
-    }
+	private function execMssqlQuery($sql) {
+		$output = array();
+		$result = odbc_exec($this->DB, $sql);
+		if (!$result) {
+			die("Invalid Query: " . odbc_errormsg());
+		} else {
+			while($row = odbc_fetch_array($result)) {
+				$row = array_change_key_case($row, CASE_UPPER);
+				array_push($output, $row);
+			}
+			//odbc_free_result($result);			
+			return $output;
+		}
+	}
+
+	public function closeDB() {
+		if ($this->DB) {
+			if ($this->dbType == "mysql") {
+				mysqli_close($this->DB);
+			} else {
+				odbc_close($this->DB);
+			}
+		}
+	}
 }
 ?>

@@ -557,4 +557,7 @@ $diskCapacitySql = "
 
 // Unsupported request
 else { echo "Error: Unsupported Request '$query_type'" . "</br>";}
+
+// close sessions
+$db->closeDB();
 ?>

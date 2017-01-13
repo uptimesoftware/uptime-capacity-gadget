@@ -13,12 +13,15 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         var dimensions = new UPTIME.pub.gadgets.Dimensions(100, 100);
         var chartDivId = null;
         var elementId = null;
+
         var dailyVal = null;
         var queryType = null;
         var timeFrame = null;
         var chartTimer = null;
+
         var capacityBuffer = 100;
         var api = new apiQueries();
+
         var baseGadgetPath = null;
 
         var textStyle = {
@@ -31,11 +34,13 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
         if (typeof options == "object") {
             dimensions = options.dimensions;
             chartDivId = options.chartDivId;
+
             dailyVal = options.dailyVal;
             queryType = options.queryType;
             elementId = options.elementId;
             timeFrame = options.timeFrame;
             capacityBuffer = options.capacityBuffer;
+
             baseGadgetPath = options.baseGadgetPath;
         }
 
@@ -46,19 +51,32 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 type: 'line',
                 style: {fontFamily: 'Arial',
                     fontSize: '9px'},
-                spacingTop: 10,
+                spacingTop: 50,
                 spacingBottom: 10},
             title: {text: ""},
             credits: {enabled: false},
             xAxis: {type: 'datetime',
                 title: {enabled: true,
                     text: ""}},
+
             yAxis: {
                 title: {enabled: false,
                     text: ""}},
             plotOptions: {spline: {marker: {enabled: false}},
                 areaspline: {marker: {enabled: false}}},
             series: [],
+			navigation: {
+				buttonOptions: {
+					verticalAlign: 'top',
+					y: -30
+                }
+			},
+			exporting: {
+				csv: {
+                dateFormat: '%Y-%m-%d',
+                itemDelimiter: ','
+                }
+			}
         });
 
         function requestData() {
@@ -112,10 +130,72 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                     chart.hideLoading();
                 }
             });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
         function addCapacityLines(data) {
             //draw the various capacity and estimated usage lines
+
+
 
             //get the first and last points from the time series data
             timeseries = data['series'];
@@ -127,6 +207,9 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
             last_Xvalue = lastPoint[0];
             last_Yvalue = lastPoint[1];
+
+
+
 
             xDeltaTotal = 0;
             yDeltaTotal = 0;
@@ -149,6 +232,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             capacityCap = data['capacity'];
             capacityCapBuffered = data['capacity'] * (capacityBuffer / 100);
 
+
             //setup the various lines we'll need to draw
             CapacityLine = [[firstPoint[0], capacityCap]];
 
@@ -158,7 +242,11 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
             LineOfBestFitForRealMetrics = [firstPoint, lastPoint];
 
+
+
+
             //setup some empty points as well
+
             bufferedcapacityWithNewVms = null;
             CapacityPoint = null;
             BufferedCapacityPoint = null;
@@ -166,14 +254,46 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             //we only need to figure out the capacity points if things are actualy trending upwards
             if (yDelta > 0)
             {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 //if the starting point for our estimated usage line is below our capacity Cap
                 if (capacityCap > last_Yvalue)
                 {
                     CapacityPoint = figureOutCapacity(capacityCap, last_Xvalue, last_Yvalue, xDelta, yDelta);
                     CapacityLine.push(CapacityPoint);
 
+
                     BufferedCapacityPoint = figureOutCapacity(capacityCapBuffered, last_Xvalue, last_Yvalue, xDelta, yDelta);
                     BufferedCapacityLine.push(BufferedCapacityPoint);
+
 
                     //pass all these points along, so that we can populate the info panel.
                     fillInInfoPanel(lastPoint, CapacityPoint, BufferedCapacityPoint, yDelta, data['unit'], data['name']);
@@ -188,6 +308,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                         //this also means that the BufferedCapcityLine is longer
                         //so we need to add another point to the real Capacity Line
                         CapacityLine.push([BufferedCapacityPoint[0], CapacityPoint[1]]);
+
+
 
                     } else
                     {
@@ -208,12 +330,31 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 justAddTitletoDoomsday(yDelta, data['unit'], data['name']);
             }
 
+
             //draw the actual lines on the chart
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             chart.addSeries({
                 name: dataname + " - Usage",
                 zindex: 2,
                 data: LineOfBestFitForRealMetrics
+
             });
 
             chart.addSeries({
@@ -221,6 +362,8 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 zindex: 2,
                 data: LineOfBestFitForEstimatedMetrics
             });
+
+
 
             chart.addSeries({
                 name: "Capacity",
@@ -232,6 +375,9 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
             if (capacityBuffer != 100)
             {
                 chart.addSeries({
+
+
+
                     name: capacityBuffer + "% Capacity",
                     zindex: 1,
                     data: BufferedCapacityLine
@@ -248,8 +394,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
 
             overview_string = "";
             overview_string += '<div id="infoTitle">' + seriesName + " over the past " + timeFrame + " months</div><br>";
-            overview_string += '<div class="infoText">Average Daily Growth: ' + Delta.toFixed(2) + " " + unit + "</br></br>";
-
+            overview_string += '<div class="infoText">Avg growth: ' + Delta.toFixed(2) + " " + unit + "/ day || ";
 
             //real capacity at current growth
             if (capPoint)
@@ -257,7 +402,7 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 endtime = capPoint[0];
                 time_left = (endtime - starttime);
                 time_left_in_days_till_Cap = Math.round(time_left / 1000 / 60 / 60 / 24);
-                overview_string += 'Days left until capacity: ' + time_left_in_days_till_Cap + "<br>";
+                overview_string += 'Days until capacity: ' + time_left_in_days_till_Cap + " || ";
 
             }
 
@@ -267,8 +412,38 @@ if (typeof UPTIME.UptimeCapacityGadget == "undefined") {
                 endtime = bufcapPoint[0];
                 time_left = (endtime - starttime);
                 time_left_in_days_till_BuffedCap = Math.round(time_left / 1000 / 60 / 60 / 24);
-                overview_string += "Days left until " + capacityBuffer + "% capacity: " + time_left_in_days_till_BuffedCap + "<br>";
+                overview_string += "Days until " + capacityBuffer + "% capacity: " + time_left_in_days_till_BuffedCap;
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
             $("#countDownTillDoomsDay").html(overview_string);

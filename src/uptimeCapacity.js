@@ -123,7 +123,7 @@ $(function () {
         statusBar.empty();
         var errorBox = uptimeErrorFormatter.getErrorBox(error, msg);
         errorBox.appendTo(statusBar);
-        statusBar.slideDown();
+        statusBar.slideDown(fast);
     }
 
     function clearStatusBar() {
