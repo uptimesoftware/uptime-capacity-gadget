@@ -168,7 +168,7 @@ class uptimeDB {
 				$row = array_change_key_case($row, CASE_UPPER);
 				array_push($output, $row);
 			}
-			//odbc_free_result($result);			
+			odbc_free_result($result);			
 			return $output;
 		}
 	}
