@@ -53,6 +53,7 @@ if ($query_type == "xenserver-Mem") {
     $min_mem_usage_array = array();
     $max_mem_usage_array = array();
     $avg_mem_usage_array = array();
+	$hostMemResults = array();
 
     $getXenServerMemUsedsql = "
         SET NOCOUNT ON;
@@ -224,6 +225,10 @@ if ($query_type == "xenserver-Mem") {
 		$hostMemResults = $db->execQuery($getXenServerMemUsedsql);
 	}
 
+	if (!isset($hostMemResults)) {
+		break;
+	}
+	
     $name = $hostMemResults[0]['NAME'];
     $memScale = 1;
 
@@ -286,6 +291,7 @@ if ($query_type == "xenserver-Mem") {
     $min_disk_usage_array = array();
     $max_disk_usage_array = array();
     $avg_disk_usage_array = array();
+	$diskUsedResults = array();
 
     $diskUsedSql ="
         SET NOCOUNT ON;
@@ -501,6 +507,10 @@ $diskCapacitySql = "
 		$diskUsedResults = $db->execQuery($diskUsedSql);
 	}
 
+	if (!isset($diskUsedResults)) {
+		break;
+	}
+	
     $name = $diskUsedResults[0]['ENTITY_NAME'] . " - " . $diskUsedResults[0]['OBJ_NAME'];
     $datastoreScale = 1;
 

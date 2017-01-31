@@ -62,6 +62,7 @@ if ($query_type == "hyperv-Mem")
 	$min_mem_usage_array = array();
 	$max_mem_usage_array = array();
 	$avg_mem_usage_array = array();
+	$hostMemResults = array();
 	
 	$sql = "
         SET nocount ON;
@@ -161,6 +162,10 @@ if ($query_type == "hyperv-Mem")
 		$hostMemResults = $db->execQuery($mysql);
 	}
 
+	if (!isset($hostMemResults)) {
+		break;
+	}
+	
 	$name = $hostMemResults[0]['NAME'];
 	$memScale = 1e-6;
 
@@ -229,6 +234,7 @@ elseif ($query_type == "hyperv-Cpu")
 	$min_cpu_usage_array = array();
 	$max_cpu_usage_array = array();
 	$avg_cpu_usage_array = array();
+	$hostCpuResults = array();
 	
 	$sql = "
         SET nocount ON;
@@ -329,7 +335,11 @@ elseif ($query_type == "hyperv-Cpu")
 	} else{
 		$hostCpuResults = $db->execQuery($mysql);
 	}
-
+	
+	if (!isset($hostCpuResults)) {
+		break;
+	}
+	
 	$name = $hostCpuResults[0]['NAME'];
 	$cpuScale = 1000;
 
@@ -401,6 +411,7 @@ elseif ( $query_type == "hyperv-Datastore")
 	$min_datastore_prov_array = array();
 	$max_datastore_prov_array = array();
 	$avg_datastore_prov_array = array();
+	$datastoreResults = array();
 	
 	$datastoreSql = "
         SET nocount ON;
@@ -519,7 +530,11 @@ GROUP BY
 	} else{
 		$datastoreResults = $db->execQuery($datastoremySql);
 	}
-
+	
+	if (!isset($datastoreResults)) {
+		break;
+	}
+	
 	$name = $datastoreResults[0]['NAME'];
 	$datastoreScale = 1e-6;
 

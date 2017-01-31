@@ -51,6 +51,7 @@ if ($query_type == "osperf-Mem") {
     $min_mem_usage_array = array();
     $max_mem_usage_array = array();
     $avg_mem_usage_array = array();
+	$hostMemResults = array();
 
     $sql="
         SET NOCOUNT ON;
@@ -128,7 +129,10 @@ GROUP BY
 	} else{
 		$hostMemResults = $db->execQuery($sql);
 	}
-    
+
+	if (!isset($hostMemResults)) {
+		break;
+	}
 
     $name = $hostMemResults[0]['NAME'];
     $memScale = 1e-6;
@@ -190,6 +194,7 @@ GROUP BY
     $min_cpu_usage_array = array();
     $max_cpu_usage_array = array();
     $avg_cpu_usage_array = array();
+	$hostCpuResults = array();
 
     $sql = "
         SET NOCOUNT ON;
@@ -269,7 +274,11 @@ GROUP BY
 	} else{
 		$hostCpuResults = $db->execQuery($sql);
 	}
-
+	
+	if (!isset($hostCpuResults)) {
+		break;
+	}
+	
     $name = $hostCpuResults[0]['NAME'];
     $cpuScale = 1;
 
@@ -332,6 +341,7 @@ GROUP BY
     $min_datastore_prov_array = array();
     $max_datastore_prov_array = array();
     $avg_datastore_prov_array = array();
+	$datastoreResults = array();
 
     $datastoreSql =
         "SET NOCOUNT ON;
@@ -394,6 +404,10 @@ GROUP BY
 		$datastoreResults = $db->execQuery($datastoreSql);
 	}
 
+	if (!isset($datastoreResults)) {
+		break;
+	}
+	
     $total_size = $datastoreResults[0]['TOTALSIZE'];
     $name = $datastoreResults[0]['NAME'];
     $datastoreScale = 1e-6;
