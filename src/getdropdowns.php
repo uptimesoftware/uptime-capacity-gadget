@@ -276,5 +276,7 @@ else {
 }
 
 // close sessions
-$db->closeDB();
+if(isset($db)) {
+	$db->closeDB();
+}
 ?>
