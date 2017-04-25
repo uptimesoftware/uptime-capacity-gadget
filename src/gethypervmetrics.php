@@ -162,7 +162,12 @@ if ($query_type == "hyperv-Mem") {
 		$hostMemResults = $db->execQuery($mysql);
 	}
 
-	$name = @$hostMemResults[0]['NAME'];
+	if(isset($hostMemResults[0])) {
+	$name = $hostMemResults[0]['NAME'];
+	} else {
+			exit("host memory array is empty");
+	}
+	
 	$memScale = 1e-6;
 
 	foreach ($hostMemResults as $index => $row) {
@@ -329,10 +334,12 @@ elseif ($query_type == "hyperv-Cpu") {
 		$hostCpuResults = $db->execQuery($mysql);
 	}
 
-	#check the array set up from the db query
-	#error_log(print_r($hostCpuResults,true));
-	#used the @ to stop the undefined errors in phperrors.. need to figure out why this erroneous error in the future
-	$name = @$hostCpuResults[0]['NAME'];
+	if(isset($hostCpuResults[0])) {
+		$name = $hostCpuResults[0]['NAME'];
+	} else {
+		exit("host cpu array is empty");
+	}
+	
 	$cpuScale = 1000;
 	
 	foreach ($hostCpuResults as $index => $row) {
@@ -518,7 +525,11 @@ GROUP BY
 		$datastoreResults = $db->execQuery($datastoremySql);
 	}
 
-	$name = @$datastoreResults[0]['NAME'];
+	if (isset($datastoreResults[0])) {
+		$name = $datastoreResults[0]['NAME'];
+	} else {
+		exit("datastore array is empty");
+	}
 	$datastoreScale = 1e-6;
 
 	$capacity = floatval(@$datastoreResults[0]['CURR_CAPACITY'] * $datastoreScale);
