@@ -16,7 +16,6 @@
 
 // Set the JSON header
 header("Content-type: text/json");
-
 include("uptimeDB.php");
 
 if (isset($_GET['query_type'])){
@@ -28,8 +27,7 @@ if (isset($_GET['uptime_offset'])){
 if (isset($_GET['time_frame'])){
 	$time_frame = $_GET['time_frame'];
 }
-else
-{
+else {
 	$time_frame = 3;
 }
 if (isset($_GET['dailyVal'])){
@@ -38,27 +36,21 @@ if (isset($_GET['dailyVal'])){
 if (isset($_GET['element'])){
 	$hyperv_object_id = $_GET['element'];
 }
+
 $json = array();
 $oneElement = array();
 $performanceData = array();
 //date_default_timezone_set('UTC');
-
 $db = new uptimeDB;
-if ($db->connectDB())
-{
+
+if ($db->connectDB()) {
 	echo "";
-
-}
-else
-{
- echo "unable to connect to DB exiting";	
- exit(1);
+} else {
+	echo "unable to connect to DB exiting";	
+	exit(1);
 }
 
-
-if ($query_type == "hyperv-Mem")
-{
-
+if ($query_type == "hyperv-Mem") {
 	$min_mem_usage_array = array();
 	$max_mem_usage_array = array();
 	$avg_mem_usage_array = array();
@@ -98,6 +90,10 @@ if ($query_type == "hyperv-Mem")
             s.hyperv_object_id,
             o.hyperv_name,
             year(s.sample_time),
+            month(s.sample_time),
+            day(s.sample_time)
+		ORDER BY
+		    year(s.sample_time),
             month(s.sample_time),
             day(s.sample_time)";
 			
@@ -152,21 +148,21 @@ if ($query_type == "hyperv-Mem")
 		s.hyperv_object_id,
 		year(s.sample_time),
 		month(s.sample_time), 
+		day(s.sample_time)
+	ORDER BY
+		year(s.sample_time),
+		month(s.sample_time), 
 		day(s.sample_time)";
 
 	if ($db->dbType == 'oracle'){
 		$hostMemResults = $db->execQuery($oracle);
 	} else if ($db->dbType == 'mssql'){
 		$hostMemResults = $db->execQuery($sql);
-	} else{
+	} else {
 		$hostMemResults = $db->execQuery($mysql);
 	}
 
-	if (!isset($hostMemResults)) {
-		break;
-	}
-	
-	$name = $hostMemResults[0]['NAME'];
+	$name = @$hostMemResults[0]['NAME'];
 	$memScale = 1e-6;
 
 	foreach ($hostMemResults as $index => $row) {
@@ -183,54 +179,47 @@ if ($query_type == "hyperv-Mem")
 		array_push($avg_mem_usage_array, $data);
 	}
 
-	$capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
+	$capacity = floatval(@$hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
 
-	if ($dailyVal == 'min')
-	{
+	if ($dailyVal == 'min') {
 		$my_series = array(
 			'name' => $name . " - Daily Mem Min",
 			'capacity' => $capacity,
 			'unit' => 'GB',
 			'series' => $min_mem_usage_array
-			);
+		);
 	}
 
-	if ($dailyVal == 'max')
-	{
+	if ($dailyVal == 'max') {
 		$my_series = array(
 			'name' => $name . " - Daily Mem Max",
 			'capacity' => $capacity,
 			'unit' => 'GB',
 			'series' => $max_mem_usage_array
-			);
+		);
 	}
 
-	if ($dailyVal == 'avg')
-	{
+	if ($dailyVal == 'avg') {
 		$my_series = array(
 			'name' => $name . " - Daily Mem Avg",
 			'capacity' => $capacity,
 			'unit' => 'GB',
 			'series' => $avg_mem_usage_array
-			);
+		);
 	}
 
-
-	if (count($my_series['series']) > 0)
-	{
+	if (count($my_series['series']) > 0) {
 		array_push($json, $my_series);
 	}
-	if (count($json) > 0)
-	{
+	
+	if (count($json) > 0) {
 		echo json_encode($json);
-	}
-	else
-	{
+	} else {
 		echo "No Data";
 	}
-}
-elseif ($query_type == "hyperv-Cpu")
-{
+} 
+
+elseif ($query_type == "hyperv-Cpu") {
 	$min_cpu_usage_array = array();
 	$max_cpu_usage_array = array();
 	$avg_cpu_usage_array = array();
@@ -271,7 +260,11 @@ elseif ($query_type == "hyperv-Cpu")
             o.hyperv_name,
             year(s.sample_time),
             month(s.sample_time),
-            day(s.sample_time)";
+            day(s.sample_time)
+		ORDER BY
+			year(s.sample_time),
+			month(s.sample_time), 
+			day(s.sample_time)";
 				
 	$oracle = "SELECT 
 		s.hyperv_object_id, 
@@ -332,17 +325,16 @@ elseif ($query_type == "hyperv-Cpu")
 		$hostCpuResults = $db->execQuery($oracle);
 	} else if ($db->dbType == 'mssql'){
 		$hostCpuResults = $db->execQuery($sql);
-	} else{
+	} else {
 		$hostCpuResults = $db->execQuery($mysql);
 	}
-	
-	if (!isset($hostCpuResults)) {
-		break;
-	}
-	
-	$name = $hostCpuResults[0]['NAME'];
-	$cpuScale = 1000;
 
+	#check the array set up from the db query
+	#error_log(print_r($hostCpuResults,true));
+	#used the @ to stop the undefined errors in phperrors.. need to figure out why this erroneous error in the future
+	$name = @$hostCpuResults[0]['NAME'];
+	$cpuScale = 1000;
+	
 	foreach ($hostCpuResults as $index => $row) {
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
 		$x = $sample_time * 1000;
@@ -359,52 +351,44 @@ elseif ($query_type == "hyperv-Cpu")
 
 	$capacity = floatval($hostCpuResults[0]['TOTAL_CAPACITY'] / $cpuScale);
 
-	if ($dailyVal == 'min')
-	{
+	if ($dailyVal == 'min') {
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Min",
 			'capacity' => $capacity,
 			'unit' => 'GHz',
 			'series' => $min_cpu_usage_array
-			);
+		);
 	}
 
-	if ($dailyVal == 'max')
-	{
+	if ($dailyVal == 'max') {
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Max",
 			'capacity' => $capacity,
 			'unit' => 'GHz',
 			'series' => $max_cpu_usage_array
-			);
+		);
 	}
 
-	if ($dailyVal == 'avg')
-	{
+	if ($dailyVal == 'avg') {
 		$my_series = array(
 			'name' => $name . " - Daily Cpu Avg",
 			'capacity' => $capacity,
 			'unit' => 'GHz',
 			'series' => $avg_cpu_usage_array
-			);
+		);
 	}
 
-	if (count($my_series['series']) > 0)
-	{
+	if (count($my_series['series']) > 0) {
 		array_push($json, $my_series);
 	}
-	if (count($json) > 0)
-	{
+	if (count($json) > 0) {
 		echo json_encode($json);
-	}
-	else
-	{
+	} else {
 		echo "No Data";
 	}
 }
 
-elseif ( $query_type == "hyperv-Datastore")
-{
+elseif ( $query_type == "hyperv-Datastore") {
 	$min_datastore_usage_array = array();
 	$max_datastore_usage_array = array();
 	$avg_datastore_usage_array = array();
@@ -454,7 +438,11 @@ elseif ( $query_type == "hyperv-Datastore")
             o.hyperv_name,
             year(s.sample_time),
             month(s.sample_time),
-            day(s.sample_time)";
+            day(s.sample_time)
+		ORDER BY
+			year(s.sample_time),
+			month(s.sample_time), 
+			day(s.sample_time)";
 			
 	$datastoreOracle = "SELECT 
 		s.hyperv_object_id, 
@@ -522,24 +510,18 @@ GROUP BY
 	month(s.sample_time), 
 	day(s.sample_time)";
 
-
 	if ($db->dbType == 'oracle'){
 		$datastoreResults = $db->execQuery($datastoreOracle);
 	} else if ($db->dbType == 'mssql'){
 		$datastoreResults = $db->execQuery($datastoreSql);
-	} else{
+	} else {
 		$datastoreResults = $db->execQuery($datastoremySql);
 	}
-	
-	if (!isset($datastoreResults)) {
-		break;
-	}
-	
-	$name = $datastoreResults[0]['NAME'];
+
+	$name = @$datastoreResults[0]['NAME'];
 	$datastoreScale = 1e-6;
 
-	$capacity = floatval($datastoreResults[0]['CURR_CAPACITY'] * $datastoreScale);
-
+	$capacity = floatval(@$datastoreResults[0]['CURR_CAPACITY'] * $datastoreScale);
 
 	foreach ($datastoreResults as $index => $row) {
 		$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
@@ -564,21 +546,20 @@ GROUP BY
 		array_push($avg_datastore_prov_array, $data);
 	}
 
-
-	if ($dailyVal == 'min')
-	{
+	if ($dailyVal == 'min') {
 		$usage_series = array(
 			'name' => $name . " - Daily Min",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $min_datastore_usage_array
-			);
+		);
+		
 		$prov_series = array(
 			'name' => $name . " - Daily Provisioned Min",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $min_datastore_prov_array
-			);
+		);
 	}
 
 	if ($dailyVal == 'max')
@@ -588,41 +569,39 @@ GROUP BY
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $max_datastore_usage_array
-			);
+		);
+		
 		$prov_series = array(
 			'name' => $name . " - Daily Provisioned Max",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $max_datastore_prov_array
-			);
+		);
 	}
 
-	if ($dailyVal == 'avg')
-	{
+	if ($dailyVal == 'avg') {
 		$usage_series = array(
 			'name' => $name . " - Daily Avg",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $avg_datastore_usage_array
-			);
+		);
+		
 		$prov_series = array(
 			'name' => $name . " - Daily Provisioned Avg",
 			'capacity' => $capacity,
 			'unit' => 'GBs',
 			'series' => $avg_datastore_prov_array
-			);
+		);
 	}
 
-	if (count($usage_series['series']) > 0)
-	{
+	if (count($usage_series['series']) > 0) {
 		array_push($json, $usage_series);
-	}
-	if (count($json) > 0)
-	{
+	} 
+	
+	if (count($json) > 0) {
 		echo json_encode($json);
-	}
-	else
-	{
+	} else {
 		echo "No Data";
 	}
 }
@@ -630,7 +609,7 @@ GROUP BY
 // Unsupported request
 else {
     echo "Error: Unsupported Request '$query_type'" . "</br>";
-    }
+}
 
 // close sessions
 $db->closeDB();
