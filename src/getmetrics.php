@@ -153,31 +153,36 @@ GROUP BY
 
     $capacity = floatval($hostMemResults[0]['TOTAL_CAPACITY'] * $memScale);
 
-    if ($dailyVal == 'min') {
+    switch ($dailyVal) {
+		case 'min':
         $my_series = array(
             'name' => $name . " - Daily Mem Min",
             'capacity' => $capacity,
             'unit' => 'GB',
             'series' => $min_mem_usage_array
         );
-    }
+		break;
 
-    if ($dailyVal == 'max') {
+		case 'max':
         $my_series = array(
             'name' => $name . " - Daily Mem Max",
             'capacity' => $capacity,
             'unit' => 'GB',
             'series' => $max_mem_usage_array
         );
-    }
+		break;
 
-    if ($dailyVal == 'avg') {
+		case 'avg': 
         $my_series = array(
             'name' => $name . " - Daily Mem Avg",
             'capacity' => $capacity,
             'unit' => 'GB',
             'series' => $avg_mem_usage_array
         );
+		break;
+		
+		default:
+		$my_series = [];
     }
 
 
@@ -298,32 +303,37 @@ GROUP BY
 
     $capacity = floatval((100 * $hostCpuResults[0]['NUM_CPU'] ) / $cpuScale);
 
-    if ($dailyVal == 'min') {
+    switch ($dailyVal) {
+		case 'min':
         $my_series = array(
             'name' => $name . " - Daily Cpu Min",
             'capacity' => $capacity,
             'unit' => '%',
             'series' => $min_cpu_usage_array
         );
-    }
+		break;
 
-    if ($dailyVal == 'max') {
+		case 'max':
         $my_series = array(
             'name' => $name . " - Daily Cpu Max",
             'capacity' => $capacity,
             'unit' => '%',
             'series' => $max_cpu_usage_array
         );
-    }
+		break;
 
-    if ($dailyVal == 'avg') {
+		case 'avg':
         $my_series = array(
             'name' => $name . " - Daily Cpu Avg",
             'capacity' => $capacity,
             'unit' => '%',
             'series' => $avg_cpu_usage_array
         );
-    }
+		break;
+		
+		default:
+		$my_series = [];
+	}
 
     if (count($my_series['series']) > 0) {
         array_push($json, $my_series);
@@ -428,7 +438,8 @@ GROUP BY
         array_push($avg_datastore_usage_array, $data);
     }
 
-    if ($dailyVal == 'min') {
+    switch ($dailyVal) {
+		case 'min':
         $usage_series = array(
             'name' => $name . " - Daily Min",
             'capacity' => $capacity,
@@ -441,9 +452,9 @@ GROUP BY
             'unit' => 'GBs',
             'series' => $min_datastore_prov_array
         );
-    }
+		break;
 
-    if ($dailyVal == 'max') {
+		case 'max':
         $usage_series = array(
             'name' => $name . " - Daily Max",
             'capacity' => $capacity,
@@ -456,9 +467,9 @@ GROUP BY
             'unit' => 'GBs',
             'series' => $max_datastore_prov_array
         );
-    }
+		break;
 
-    if ($dailyVal == 'avg') {
+		case 'avg':
         $usage_series = array(
             'name' => $name . " - Daily Avg",
             'capacity' => $capacity,
@@ -471,6 +482,11 @@ GROUP BY
             'unit' => 'GBs',
             'series' => $avg_datastore_prov_array
         );
+		break;
+
+		default:
+		$prov_series =[];
+		$usage_series =[];
     }
 
     if (count($usage_series['series']) > 0) {
