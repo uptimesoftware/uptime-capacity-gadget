@@ -22,7 +22,7 @@ class uptimeDB {
     private $dbName;
     private $dbUsername;
     private $dbPassword;
-    private $DB;
+    public $DB;
 
     public function __construct() {
         $uptime_dir = substr(getenv("MIBDIRS"), 0, -4);
