@@ -194,7 +194,7 @@ if ($query_type == "xenserver-Mem") {
 	}
     $myhostMemUsed = 0;
     $myhostMemFree = 0;
-    foreach ($capacitySQLResults as $index => $row) {
+    foreach ((array)$capacitySQLResults as $index => $row) {
         if ($row['NAME'] == 'hostMemFree') {
             $myhostMemFree = $row['VAL'];
         } elseif ($row['NAME'] == 'hostMemUsed') {
@@ -213,7 +213,7 @@ if ($query_type == "xenserver-Mem") {
 	
     $name = $hostMemResults[0]['NAME'];
     $memScale = 1;
-    foreach ($hostMemResults as $index => $row) {
+    foreach ((array)$hostMemResults as $index => $row) {
         $sample_time = strtotime($row['SAMPLE_TIME']) - $offset;
         $x = $sample_time * 1000;
         $data = array($x, floatval($row['MIN_MEM_USAGE'] * $memScale));
@@ -247,10 +247,10 @@ if ($query_type == "xenserver-Mem") {
             'series' => $avg_mem_usage_array
         );
     }
-    if (count($my_series['series']) > 0) {
+    if (count((array)$my_series['series']) > 0) {
         array_push($json, $my_series);
     }
-    if (count($json) > 0) {
+    if (count((array)$json) > 0) {
         echo json_encode($json);
     } else {
         echo "No Data";
@@ -453,7 +453,7 @@ $diskCapacitySql = $db->DB->prepare("
 	}
     $mydiskUsed = 0;
     $mydiskFree = 0;
-    foreach ($diskCapacityResults as $index => $row) {
+    foreach ((array)$diskCapacityResults as $index => $row) {
         if ($row['NAME'] == 'diskFree') {
             $mydiskFree = $row['VAL'];
         } elseif ($row['NAME'] == 'diskUsed') {
@@ -506,10 +506,10 @@ $diskCapacitySql = $db->DB->prepare("
             'series' => $avg_disk_usage_array
         );
     }
-    if (count($usage_series['series']) > 0) {
+    if (count((array)$usage_series['series']) > 0) {
         array_push($json, $usage_series);
     }
-    if (count($json) > 0) {
+    if (count((array)$json) > 0) {
         echo json_encode($json);
     } else {
         echo "No Data";
