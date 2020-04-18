@@ -47,50 +47,89 @@ if ($query_type == "osperf-Mem") {
     $min_mem_usage_array = array();
     $max_mem_usage_array = array();
     $avg_mem_usage_array = array();
-	$hostMemResults = array();
-	
-    $sql=$db->DB->prepare("
-        SET NOCOUNT ON;
-        DECLARE @vmware_object_id int;
-        DECLARE @time_frame int;
-        DECLARE @time_from date;
-        SET @vmware_object_id = $vmware_object_id;
-        SET @time_frame = $time_frame;
-        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
-        SELECT 
-			e.entity_id,
-			e.display_name as NAME,
-			MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
-			min(a.free_mem) as MIN_MEM_USAGE,
-			max(a.free_mem) as MAX_MEM_USAGE,
-			avg(a.free_mem) as AVG_MEM_USAGE,
-			min(c.memsize) as TOTAL_CAPACITY
-		FROM 
-			performance_aggregate a
-		JOIN performance_sample s
-			ON (
-				s.sample_time > @time_from AND
-                a.sample_id = s.id
-			)
-		JOIN entity e
-			ON (s.uptimehost_id = e.entity_id)
-		JOIN entity_configuration c
-			ON (
-				e.entity_id = @vmware_object_id AND
-                e.entity_id = c.entity_id
-			)
-		GROUP BY
-			e.entity_id,
-            e.display_name,
-            year(s.sample_time),
-            month(s.sample_time), 
-            day(s.sample_time)
-		ORDER BY
-			year(s.sample_time),
-            month(s.sample_time), 
-            day(s.sample_time)");
+    $hostMemResults = array();
     
-    $mysql = $db->DB->prepare("
+    $mssql="
+    SET NOCOUNT ON;
+    DECLARE @vmware_object_id int;
+    DECLARE @time_frame int;
+    DECLARE @time_from date;
+    SET
+        @vmware_object_id = $vmware_object_id;
+    SET
+        @time_frame = $time_frame;
+    SET
+        @time_from = DATEADD(month, - @time_frame, GETDATE()) 
+    SELECT
+      e.entity_id,
+      e.display_name as NAME,
+      MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+      min(a.free_mem) as MIN_MEM_USAGE,
+      max(a.free_mem) as MAX_MEM_USAGE,
+      avg(a.free_mem) as AVG_MEM_USAGE,
+      min(c.memsize) as TOTAL_CAPACITY 
+   FROM
+    performance_aggregate a 
+    JOIN
+        performance_sample s 
+        ON ( s.sample_time > @time_from 
+        AND a.sample_id = s.id ) 
+    JOIN
+        entity e 
+        ON (s.uptimehost_id = e.entity_id) 
+    JOIN
+        entity_configuration c 
+        ON ( e.entity_id = @vmware_object_id 
+        AND e.entity_id = c.entity_id ) 
+    GROUP BY
+        e.entity_id,
+        e.display_name,
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time) 
+   ORDER BY
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)";
+	
+    $oraclesql="
+    SELECT
+        e.entity_id,
+        e.display_name as NAME,
+        MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.free_mem) as MIN_MEM_USAGE,
+        max(a.free_mem) as MAX_MEM_USAGE,
+        avg(a.free_mem) as AVG_MEM_USAGE,
+        min(c.memsize) as TOTAL_CAPACITY
+    FROM
+        performance_aggregate a
+    JOIN 
+        performance_sample s
+        ON (
+            s.sample_time > ADD_MONTHS(SYSDATE,-$time_frame) AND
+            a.sample_id = s.id
+        )
+    JOIN 
+        entity e
+        ON (s.uptimehost_id = e.entity_id)
+    JOIN 
+        entity_configuration c
+        ON (
+            e.entity_id = $vmware_object_id AND
+            e.entity_id = c.entity_id
+        )
+    GROUP BY
+        e.entity_id,
+        e.display_name,
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time),
+        EXTRACT(DAY FROM s.sample_time)
+    ORDER BY
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time),
+        EXTRACT(DAY FROM s.sample_time)";
+    
+    $mysql="
 		SELECT
 			e.entity_id,
 			e.display_name as NAME,
@@ -116,12 +155,14 @@ if ($query_type == "osperf-Mem") {
 			e.entity_id,
 			year(s.sample_time),
 			month(s.sample_time),
-			day(s.sample_time)");
+			day(s.sample_time)";
 	
 	if ($db->dbType == 'mysql'){
 		$hostMemResults = $db->execQuery($mysql);
+	} else if ($db->dbType == 'mssql'){
+		$hostMemResults = $db->execQuery($mssql);
 	} else {
-		$hostMemResults = $db->execQuery($sql);
+		$hostMemResults = $db->execQuery($oraclesql);
 	}
  
 	if(isset($hostMemResults[0])) {
@@ -183,83 +224,123 @@ elseif ($query_type == "osperf-Cpu") {
     $min_cpu_usage_array = array();
     $max_cpu_usage_array = array();
     $avg_cpu_usage_array = array();
-	$hostCpuResults = array();
-	
-    $sql = $db->DB->prepare("
-        SET NOCOUNT ON;
-        DECLARE @vmware_object_id int;
-        DECLARE @time_frame int;
-        DECLARE @time_from date;
-        SET @vmware_object_id = $vmware_object_id;
-        SET @time_frame = $time_frame;
-        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
-        SELECT
-			e.entity_id,
-			e.display_name as NAME,
-			MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
-			min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
-			max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
-			avg(a.cpu_usr + a.cpu_sys + a.cpu_wio) as AVG_CPU_USAGE,
-			min(c.numcpus) as NUM_CPU,
-			min(u.mhz) as TOTAL_MHZ
-        FROM 
-			performance_aggregate a
-			JOIN performance_sample s
-					ON (
-							s.sample_time > @time_from AND
-							a.sample_id = s.id		
-					)
-			JOIN entity e
-					ON (s.uptimehost_id = e.entity_id)
-			JOIN entity_configuration c
-					ON (
-							e.entity_id = @vmware_object_id AND
-							e.entity_id = c.entity_id		
-					)
-			JOIN entity_configuration_cpu u
-					ON c.entity_configuration_id = u.entity_configuration_id
-        GROUP BY
-			e.entity_id,
-			e.display_name,
-			year(s.sample_time),
-			month(s.sample_time), 
-			day(s.sample_time)
-        ORDER BY
-			year(s.sample_time),
-			month(s.sample_time), 
-			day(s.sample_time)");
+    $hostCpuResults = array();
     
-    $mysql = $db->DB->prepare("
-		SELECT
-			e.entity_id,
-			e.display_name as NAME,
-			date(s.sample_time) as SAMPLE_TIME,
-			min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
-			max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
-			avg(a.cpu_usr + a.cpu_sys + a.cpu_wio) as AVG_CPU_USAGE,
-			c.numcpus as NUM_CPU,
-			u.mhz as TOTAL_MHZ,
-			day(s.sample_time),
-			month(s.sample_time),
-			year(s.sample_time)
-		FROM
-			performance_aggregate a, performance_sample s, entity e, entity_configuration c, entity_configuration_cpu u
-		WHERE
-			s.id = a.sample_id AND
-			s.uptimehost_id = e.entity_id AND
-			e.entity_id = c.entity_id AND
-			c.entity_configuration_id = u.entity_configuration_id AND
-			s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-			e.entity_id = $vmware_object_id
-		GROUP BY
-			e.entity_id,
-			year(s.sample_time),
-			month(s.sample_time),
-			day(s.sample_time)");
+    $mssql ="
+    SET NOCOUNT ON;
+    DECLARE @vmware_object_id int;
+    DECLARE @time_frame int;
+    DECLARE @time_from date;
+    SET @vmware_object_id = $vmware_object_id;
+    SET @time_frame = $time_frame;
+    SET @time_from = DATEADD(month, -@time_frame, GETDATE())
+    SELECT
+        e.entity_id,
+        e.display_name as NAME,
+        MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
+        max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
+        avg(a.cpu_usr + a.cpu_sys + a.cpu_wio) as AVG_CPU_USAGE,
+        min(c.numcpus) as NUM_CPU,
+        min(u.mhz) as TOTAL_MHZ
+    FROM 
+        performance_aggregate a
+        JOIN performance_sample s
+                ON (
+                    s.sample_time > @time_from AND
+                    a.sample_id = s.id		
+                )
+        JOIN entity e
+                ON (s.uptimehost_id = e.entity_id)
+        JOIN entity_configuration c
+                ON (
+                    e.entity_id = @vmware_object_id AND
+                    e.entity_id = c.entity_id		
+                )
+        JOIN entity_configuration_cpu u
+                ON c.entity_configuration_id = u.entity_configuration_id
+    GROUP BY
+        e.entity_id,
+        e.display_name,
+        year(s.sample_time),
+        month(s.sample_time), 
+        day(s.sample_time)
+    ORDER BY
+        year(s.sample_time),
+        month(s.sample_time), 
+        day(s.sample_time)";
+
+    $oraclesql ="
+    SELECT
+        e.entity_id,
+        e.display_name as NAME,
+        MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
+        max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
+        avg(a.cpu_usr + a.cpu_sys + a.cpu_wio) as AVG_CPU_USAGE,
+        min(c.numcpus) as NUM_CPU,
+        min(u.mhz) as TOTAL_MHZ
+    FROM 
+        performance_aggregate a
+        JOIN performance_sample s
+                ON (
+                    s.sample_time > ADD_MONTHS(SYSDATE,-$time_frame) AND
+                    a.sample_id = s.id		
+                )
+        JOIN entity e
+                ON (s.uptimehost_id = e.entity_id)
+        JOIN entity_configuration c
+                ON (
+                    e.entity_id = $vmware_object_id AND
+                    e.entity_id = c.entity_id		
+                )
+        JOIN entity_configuration_cpu u
+                ON c.entity_configuration_id = u.entity_configuration_id
+    GROUP BY
+        e.entity_id,
+        e.display_name,
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)
+    ORDER BY
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)";
+       
+    $mysql ="
+    SELECT
+        e.entity_id,
+        e.display_name as NAME,
+        date(s.sample_time) as SAMPLE_TIME,
+        min(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MIN_CPU_USAGE,
+        max(a.cpu_usr + a.cpu_sys + a.cpu_wio) as MAX_CPU_USAGE,
+        avg(a.cpu_usr + a.cpu_sys + a.cpu_wio) as AVG_CPU_USAGE,
+        c.numcpus as NUM_CPU,
+        u.mhz as TOTAL_MHZ,
+        day(s.sample_time),
+        month(s.sample_time),
+        year(s.sample_time)
+    FROM
+        performance_aggregate a, performance_sample s, entity e, entity_configuration c, entity_configuration_cpu u
+    WHERE
+        s.id = a.sample_id AND
+        s.uptimehost_id = e.entity_id AND
+        e.entity_id = c.entity_id AND
+        c.entity_configuration_id = u.entity_configuration_id AND
+        s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
+        e.entity_id = $vmware_object_id
+    GROUP BY
+        e.entity_id,
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)";
+            
     if ($db->dbType == 'mysql'){
 		$hostCpuResults = $db->execQuery($mysql);
+	} else if ($db->dbType == 'mssql'){
+		$hostCpuResults = $db->execQuery($mssql);
 	} else{
-		$hostCpuResults = $db->execQuery($sql);
+		$hostCpuResults = $db->execQuery($oraclesql);
 	}
 	if(isset($hostCpuResults[0])) {
 		$name = $hostCpuResults[0]['NAME'];
@@ -324,40 +405,68 @@ elseif ($query_type == "osperf-Filesystem") {
     $max_datastore_prov_array = array();
     $avg_datastore_prov_array = array();
 	$datastoreResults = array();
-	
-    $datastoreSql =$db->DB->prepare("SET NOCOUNT ON;
-        DECLARE @vmware_object_id int;
-        DECLARE @time_frame int;
-        DECLARE @time_from date;
-        SET @vmware_object_id = $vmware_object_id;
-        SET @time_frame = $time_frame;
-        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
-        SELECT
-			min(e.display_name) as NAME,
-			min(cast(s.sample_time as date)) as SAMPLE_TIME,
-			sum(a.total_size) as TOTAL_CAPACITY,
-			sum(a.total_size) as TOTALSIZE ,
-			min(a.space_used) as MIN_FILESYS_USAGE,
-			max(a.space_used) as MAX_FILESYS_USAGE,
-			avg(a.space_used) as AVG_FILESYS_USAGE
-        FROM
-			performance_fscap a
-        JOIN performance_sample s
-			ON (
-					s.id = a.sample_id AND
-					s.sample_time >  @time_from
-			)
-        JOIN entity e
-			ON (
-					s.uptimehost_id = e.entity_id AND
-					e.entity_id = @vmware_object_id
-			)
-        GROUP BY
-			sample_id
-        ORDER BY
-			sample_id");
     
-    $datastoremySql = $db->DB->prepare("SELECT
+    $datastoreMsSql ="
+    SET NOCOUNT ON;
+    DECLARE @vmware_object_id int;
+    DECLARE @time_frame int;
+    DECLARE @time_from date;
+    SET @vmware_object_id = $vmware_object_id;
+    SET @time_frame = $time_frame;
+    SET @time_from = DATEADD(month, -@time_frame, GETDATE())
+    SELECT
+        min(e.display_name) as NAME,
+        min(cast(s.sample_time as date)) as SAMPLE_TIME,
+        sum(a.total_size) as TOTAL_CAPACITY,
+        sum(a.total_size) as TOTALSIZE ,
+        min(a.space_used) as MIN_FILESYS_USAGE,
+        max(a.space_used) as MAX_FILESYS_USAGE,
+        avg(a.space_used) as AVG_FILESYS_USAGE
+    FROM
+        performance_fscap a
+    JOIN performance_sample s
+        ON (
+            s.id = a.sample_id AND
+            s.sample_time >  @time_from
+        )
+    JOIN entity e
+        ON (
+            s.uptimehost_id = e.entity_id AND
+            e.entity_id = @vmware_object_id
+        )
+    GROUP BY
+        sample_id
+    ORDER BY
+        sample_id";
+
+    $datastoreOracleSql="
+    SELECT
+        min(e.display_name) as NAME,
+        min(cast(s.sample_time as date)) as SAMPLE_TIME,
+        sum(a.total_size) as TOTAL_CAPACITY,
+        sum(a.total_size) as TOTALSIZE ,
+        min(a.space_used) as MIN_FILESYS_USAGE,
+        max(a.space_used) as MAX_FILESYS_USAGE,
+        avg(a.space_used) as AVG_FILESYS_USAGE
+    FROM
+        performance_fscap a
+    JOIN performance_sample s
+        ON (
+            s.id = a.sample_id AND
+            s.sample_time >  ADD_MONTHS(SYSDATE,-$time_frame)
+        )
+    JOIN entity e
+        ON (
+            s.uptimehost_id = e.entity_id AND
+            e.entity_id = $vmware_object_id
+        )
+    GROUP BY
+        sample_id
+    ORDER BY
+        sample_id";
+    
+    $datastoremySql ="
+    SELECT
 		e.display_name as NAME,
 		date(s.sample_time) as SAMPLE_TIME,
 		sum(a.total_size) as TOTAL_CAPACITY,
@@ -373,13 +482,16 @@ elseif ($query_type == "osperf-Filesystem") {
 		s.sample_time > date_sub(now(),interval ". $time_frame . " month) AND
 		e.entity_id = $vmware_object_id
 	GROUP BY
-		sample_id");
+		sample_id";
     
     if ($db->dbType == 'mysql'){
 		$datastoreResults = $db->execQuery($datastoremySql);
-	} else{
-		$datastoreResults = $db->execQuery($datastoreSql);
-	}
+	} else if ($db->dbType == 'mssql'){
+		$datastoreResults = $db->execQuery($datastoreMsSql);
+	} else {
+		$datastoreResults = $db->execQuery($datastoreOracleSql);
+    }
+    
 	if(isset($datastoreResults[0])) {
 		$name = $datastoreResults[0]['NAME'];
 	} else {

@@ -53,46 +53,76 @@ if ($query_type == "vmware-Mem") {
     $avg_mem_usage_array = array();
 	$hostMemResults = array();
 
-    $sql = "
-        SET nocount ON;
-        DECLARE @vmware_object_id int;
-        DECLARE @time_frame int;
-        DECLARE @time_from date;
-
-        SET @vmware_object_id = $vmware_object_id;
-        SET @time_frame = $time_frame;
-        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
-
-        SELECT
-            s.vmware_object_id,
-            o.vmware_name as NAME,
-            MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
-            min(a.memory_usage) as MIN_MEM_USAGE,
-            max(a.memory_usage) as MAX_MEM_USAGE,
-            avg(a.memory_usage) as AVG_MEM_USAGE,
-            min(a.memory_total) as TOTAL_CAPACITY
+    $mssql="
+    SET nocount ON;
+    DECLARE @vmware_object_id int;
+    DECLARE @time_frame int;
+    DECLARE @time_from date;
+    SET @vmware_object_id = $vmware_object_id;
+    SET @time_frame = $time_frame;
+    SET @time_from = DATEADD(month, -@time_frame, GETDATE())
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.memory_usage) as MIN_MEM_USAGE,
+        max(a.memory_usage) as MAX_MEM_USAGE,
+        avg(a.memory_usage) as AVG_MEM_USAGE,
+        min(a.memory_total) as TOTAL_CAPACITY
 	FROM
-            vmware_perf_aggregate a
+        vmware_perf_aggregate a
 	JOIN vmware_perf_sample s
-            ON (
-                s.sample_id = a.sample_id AND
-                s.sample_time > @time_from
-            )
+        ON (
+            s.sample_id = a.sample_id AND
+            s.sample_time > @time_from
+        )
 	JOIN vmware_object o
-            ON (
-                s.vmware_object_id = o.vmware_object_id AND
-                s.vmware_object_id = @vmware_object_id
-            )
-        GROUP BY
-            s.vmware_object_id,
-            o.vmware_name,
-            year(s.sample_time),
-            month(s.sample_time),
-            day(s.sample_time)
-		ORDER BY
-			year(s.sample_time),
-            month(s.sample_time),
-            day(s.sample_time)";
+        ON (
+            s.vmware_object_id = o.vmware_object_id AND
+            s.vmware_object_id = @vmware_object_id
+        )
+    GROUP BY
+        s.vmware_object_id,
+        o.vmware_name,
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)
+    ORDER BY
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)";
+    
+    $oraclesql="
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        MIN(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.memory_usage) as MIN_MEM_USAGE,
+        max(a.memory_usage) as MAX_MEM_USAGE,
+        avg(a.memory_usage) as AVG_MEM_USAGE,
+        min(a.memory_total) as TOTAL_CAPACITY
+    FROM
+        vmware_perf_aggregate a
+    JOIN vmware_perf_sample s
+        ON (
+            s.sample_id = a.sample_id AND
+            s.sample_time > ADD_MONTHS(SYSDATE,-$time_frame)
+        )
+    JOIN vmware_object o
+        ON (
+            s.vmware_object_id = o.vmware_object_id AND
+            s.vmware_object_id = $vmware_object_id
+        )
+    GROUP BY
+        s.vmware_object_id,
+        o.vmware_name,
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)
+    ORDER BY
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)";
 
     $mysql = "SELECT
 		s.vmware_object_id,
@@ -120,8 +150,10 @@ if ($query_type == "vmware-Mem") {
 
 	if ($db->dbType == 'mysql'){
 		$hostMemResults = $db->execQuery($mysql);
+	} else if ($db->dbType == 'mssql'){
+		$hostMemResults = $db->execQuery($mssql);
 	} else {
-		$hostMemResults = $db->execQuery($sql);
+		$hostMemResults = $db->execQuery($oraclesql);
 	}
 
     $name = $hostMemResults[0]['NAME'];
@@ -184,50 +216,83 @@ elseif ($query_type == "vmware-Cpu") {
     $min_cpu_usage_array = array();
     $max_cpu_usage_array = array();
     $avg_cpu_usage_array = array();
-	$hostCpuResults = array();
+    $hostCpuResults = array();
+    
+    $mssql="
+    SET nocount ON;
+    DECLARE @vmware_object_id int;
+    DECLARE @time_frame int;
+    DECLARE @time_from date;
 
-    $sql = "
-        SET nocount ON;
-        DECLARE @vmware_object_id int;
-        DECLARE @time_frame int;
-        DECLARE @time_from date;
+    SET @vmware_object_id = $vmware_object_id;
+    SET @time_frame = $time_frame;
+    SET @time_from = DATEADD(month, -@time_frame, GETDATE())
 
-        SET @vmware_object_id = $vmware_object_id;
-        SET @time_frame = $time_frame;
-        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
-
-        SELECT
-            s.vmware_object_id,
-            o.vmware_name as NAME,
-            min(cast(s.sample_time as date)) as SAMPLE_TIME,
-            min(a.cpu_usage) as MIN_CPU_USAGE,
-            max(a.cpu_usage) as MAX_CPU_USAGE,
-            avg(a.cpu_usage) as AVG_CPU_USAGE,
-            min(a.cpu_total) as TOTAL_CAPACITY
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        min(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.cpu_usage) as MIN_CPU_USAGE,
+        max(a.cpu_usage) as MAX_CPU_USAGE,
+        avg(a.cpu_usage) as AVG_CPU_USAGE,
+        min(a.cpu_total) as TOTAL_CAPACITY
 	FROM
-            vmware_perf_aggregate a
+        vmware_perf_aggregate a
 	JOIN vmware_perf_sample s
-            ON (
-		s.sample_id = a.sample_id AND
-		s.sample_time > @time_from
-            )
+        ON (
+            s.sample_id = a.sample_id AND
+            s.sample_time > @time_from
+        )
 	JOIN vmware_object o
-            ON (
-		s.vmware_object_id = o.vmware_object_id AND
-		s.vmware_object_id = @vmware_object_id
-            )
-        GROUP BY
-            s.vmware_object_id,
-            o.vmware_name,
-            year(s.sample_time),
-            month(s.sample_time),
-            day(s.sample_time)
-		ORDER BY
-			year(s.sample_time),
-            month(s.sample_time),
-            day(s.sample_time)";
+        ON (
+            s.vmware_object_id = o.vmware_object_id AND
+            s.vmware_object_id = @vmware_object_id
+        )
+    GROUP BY
+        s.vmware_object_id,
+        o.vmware_name,
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)
+    ORDER BY
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)";
+
+    $oraclesql="
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        min(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(a.cpu_usage) as MIN_CPU_USAGE,
+        max(a.cpu_usage) as MAX_CPU_USAGE,
+        avg(a.cpu_usage) as AVG_CPU_USAGE,
+        min(a.cpu_total) as TOTAL_CAPACITY
+	FROM
+        vmware_perf_aggregate a
+	JOIN vmware_perf_sample s
+        ON (
+            s.sample_id = a.sample_id AND
+            s.sample_time > ADD_MONTHS(SYSDATE,-$time_frame)
+        )
+	JOIN vmware_object o
+        ON (
+            s.vmware_object_id = o.vmware_object_id AND
+            s.vmware_object_id = $vmware_object_id
+        )
+    GROUP BY
+        s.vmware_object_id,
+        o.vmware_name,
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)
+    ORDER BY
+    EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)";
         
-    $mysql = "SELECT
+    $mysql = "
+    SELECT
 		s.vmware_object_id,
 		o.vmware_name as NAME,
 		date(s.sample_time) as SAMPLE_TIME,
@@ -254,8 +319,10 @@ elseif ($query_type == "vmware-Cpu") {
 
 	if ($db->dbType == 'mysql'){
 		$hostCpuResults = $db->execQuery($mysql);
-	} else{
-		$hostCpuResults = $db->execQuery($sql);
+	} else if ($db->dbType == 'mssql'){
+		$hostCpuResults = $db->execQuery($mssql);
+	} else {
+		$hostCpuResults = $db->execQuery($oraclesql);
 	}
 
     $name = @$hostCpuResults[0]['NAME'];
@@ -322,90 +389,131 @@ elseif ($query_type == "vmware-Datastore") {
     $min_datastore_prov_array = array();
     $max_datastore_prov_array = array();
     $avg_datastore_prov_array = array();
-	$datastoreResults = array();
-	
-    $datastoreSql = "
-        SET nocount ON;
-        DECLARE @vmware_object_id int;
-        DECLARE @time_frame int;
-        DECLARE @time_from date;
-
-        SET @vmware_object_id = $vmware_object_id;
-        SET @time_frame = $time_frame;
-        SET @time_from = DATEADD(month, -@time_frame, GETDATE())
-
-        SELECT
-            s.vmware_object_id,
-            o.vmware_name as NAME,
-            min(cast(s.sample_time as date)) as SAMPLE_TIME,
-            min(u.usage_total) as MIN_USAGE,
-            max(u.usage_total) as MAX_USAGE,
-            avg(u.usage_total) as AVG_USAGE,
-            min(u.provisioned) as MIN_PROV,
-            max(u.provisioned) as MAX_PROV,
-            avg(u.provisioned) as AVG_PROV,
-			(SELECT capacity FROM vmware_perf_datastore_usage vpdu
-				INNER JOIN vmware_latest_datastore_sample vlds 
-				ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = @vmware_object_id) AS CURR_CAPACITY,
-            min(u.capacity) as TOTAL_CAPACITY
-        FROM
-            vmware_perf_datastore_usage u
-	JOIN vmware_perf_sample s
+    $datastoreResults = array();
+    
+    $datastoreMsSql="
+    SET nocount ON;
+    DECLARE @vmware_object_id int;
+    DECLARE @time_frame int;
+    DECLARE @time_from date;
+    SET @vmware_object_id = $vmware_object_id;
+    SET @time_frame = $time_frame;
+    SET @time_from = DATEADD(month, -@time_frame, GETDATE())
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        min(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(u.usage_total) as MIN_USAGE,
+        max(u.usage_total) as MAX_USAGE,
+        avg(u.usage_total) as AVG_USAGE,
+        min(u.provisioned) as MIN_PROV,
+        max(u.provisioned) as MAX_PROV,
+        avg(u.provisioned) as AVG_PROV,
+        (SELECT capacity FROM vmware_perf_datastore_usage vpdu
+            INNER JOIN vmware_latest_datastore_sample vlds 
+            ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = @vmware_object_id) AS CURR_CAPACITY,
+        min(u.capacity) as TOTAL_CAPACITY
+    FROM
+        vmware_perf_datastore_usage u
+    JOIN vmware_perf_sample s
             ON (
                 s.sample_id = u.sample_id AND
                 s.sample_time > @time_from
             )
-	JOIN vmware_object o
+    JOIN vmware_object o
             ON (
                 s.vmware_object_id = o.vmware_object_id AND
                 s.vmware_object_id = @vmware_object_id
             )
-        GROUP BY
-            s.vmware_object_id,
-            o.vmware_name,
-            year(s.sample_time),
-            month(s.sample_time),
-            day(s.sample_time)
-		ORDER BY
-			year(s.sample_time),
-            month(s.sample_time),
-            day(s.sample_time)";
+    GROUP BY
+        s.vmware_object_id,
+        o.vmware_name,
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)
+    ORDER BY
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)";
+	
+    $datastoreOracleSql = "
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        min(cast(s.sample_time as date)) as SAMPLE_TIME,
+        min(u.usage_total) as MIN_USAGE,
+        max(u.usage_total) as MAX_USAGE,
+        avg(u.usage_total) as AVG_USAGE,
+        min(u.provisioned) as MIN_PROV,
+        max(u.provisioned) as MAX_PROV,
+        avg(u.provisioned) as AVG_PROV,
+        (SELECT capacity FROM vmware_perf_datastore_usage vpdu
+            INNER JOIN vmware_latest_datastore_sample vlds 
+            ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = $vmware_object_id) AS CURR_CAPACITY,
+        min(u.capacity) as TOTAL_CAPACITY
+    FROM
+        vmware_perf_datastore_usage u
+    JOIN vmware_perf_sample s
+        ON (
+            s.sample_id = u.sample_id AND
+            s.sample_time > ADD_MONTHS(SYSDATE,-$time_frame)
+        )
+    JOIN vmware_object o
+        ON (
+            s.vmware_object_id = o.vmware_object_id AND
+            s.vmware_object_id = $vmware_object_id
+        )
+    GROUP BY
+        s.vmware_object_id,
+        o.vmware_name,
+        EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)
+    ORDER BY
+    EXTRACT(YEAR FROM s.sample_time),
+        EXTRACT(MONTH FROM s.sample_time), 
+        EXTRACT(DAY FROM s.sample_time)";
+        
+      
 
-    $datastoremySql = "SELECT
-	s.vmware_object_id,
-	o.vmware_name as NAME,
-	date(s.sample_time) as SAMPLE_TIME,
-	min(u.usage_total) as MIN_USAGE,
-	max(u.usage_total) as MAX_USAGE,
-	avg(u.usage_total) as AVG_USAGE,
-	min(u.provisioned) as MIN_PROV,
-	max(u.provisioned) as MAX_PROV,
-	avg(u.provisioned) as AVG_PROV,
-	(SELECT capacity FROM vmware_perf_datastore_usage vpdu
-	INNER JOIN uptime.vmware_latest_datastore_sample vlds 
-	ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = $vmware_object_id) AS CURR_CAPACITY,
-	u.capacity as TOTAL_CAPACITY,
-	day(s.sample_time),
-	month(s.sample_time),
-	year(s.sample_time)
-FROM
-	vmware_perf_datastore_usage u, vmware_perf_sample s, vmware_object o
-WHERE
-	s.sample_id = u.sample_id AND
-	s.vmware_object_id = o.vmware_object_id AND
-	s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
-	s.vmware_object_id = $vmware_object_id
+    $datastoremySql = "
+    SELECT
+        s.vmware_object_id,
+        o.vmware_name as NAME,
+        date(s.sample_time) as SAMPLE_TIME,
+        min(u.usage_total) as MIN_USAGE,
+        max(u.usage_total) as MAX_USAGE,
+        avg(u.usage_total) as AVG_USAGE,
+        min(u.provisioned) as MIN_PROV,
+        max(u.provisioned) as MAX_PROV,
+        avg(u.provisioned) as AVG_PROV,
+        (SELECT capacity FROM vmware_perf_datastore_usage vpdu
+        INNER JOIN uptime.vmware_latest_datastore_sample vlds 
+        ON vlds.sample_id = vpdu.sample_id and vlds.vmware_object_id = $vmware_object_id) AS CURR_CAPACITY,
+        u.capacity as TOTAL_CAPACITY,
+        day(s.sample_time),
+        month(s.sample_time),
+        year(s.sample_time)
+    FROM
+        vmware_perf_datastore_usage u, vmware_perf_sample s, vmware_object o
+    WHERE
+        s.sample_id = u.sample_id AND
+        s.vmware_object_id = o.vmware_object_id AND
+        s.sample_time > date_sub(now(),interval  ". $time_frame . " month) AND
+        s.vmware_object_id = $vmware_object_id
 
-GROUP BY
-	s.vmware_object_id,
-	year(s.sample_time),
-	month(s.sample_time),
-	day(s.sample_time)";
+    GROUP BY
+        s.vmware_object_id,
+        year(s.sample_time),
+        month(s.sample_time),
+        day(s.sample_time)";
 
 	if ($db->dbType == 'mysql'){
 		$datastoreResults = $db->execQuery($datastoremySql);
+	} else if ($db->dbType == 'mssql'){
+		$datastoreResults = $db->execQuery($datastoreMsSql);
 	} else{
-		$datastoreResults = $db->execQuery($datastoreSql);
+		$datastoreResults = $db->execQuery($datastoreOracleSql);
 	}
 
     $name = @$datastoreResults[0]['NAME'];
