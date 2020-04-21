@@ -153,6 +153,8 @@ if ($query_type == "osperf-Mem") {
 			e.entity_id = $vmware_object_id
 		GROUP BY
 			e.entity_id,
+			e.display_name,
+			s.sample_time,
 			year(s.sample_time),
 			month(s.sample_time),
 			day(s.sample_time)";
@@ -331,6 +333,10 @@ elseif ($query_type == "osperf-Cpu") {
         e.entity_id = $vmware_object_id
     GROUP BY
         e.entity_id,
+	e.display_name,
+	s.sample_time,
+	c.numcpus,
+	u.mhz,
         year(s.sample_time),
         month(s.sample_time),
         day(s.sample_time)";
