@@ -1,6 +1,6 @@
 {
   "name": "uptime.CapacityGadget",
-  "version": "1.8",
+  "version": "1.9",
   "description": "Capacity Planning Gadget",
   "main": "src/uptimeCapacity.js",
   "repository": {
